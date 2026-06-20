@@ -37,7 +37,11 @@ export async function POST(req: Request) {
     .split(",")
     .map((s) => s.trim().toUpperCase())
     .filter(Boolean);
-  const papel = adminDocs.includes(d.numeroDocumento) ? "ADMIN" : "UTENTE";
+  // O primeiro utente registado torna-se administrador (bootstrap sem
+  // configuração); depois disso, só os documentos em PSN_ADMIN_DOCS.
+  const ehPrimeiroUtente = (await prisma.utente.count()) === 0;
+  const papel =
+    ehPrimeiroUtente || adminDocs.includes(d.numeroDocumento) ? "ADMIN" : "UTENTE";
 
   const utente = await prisma.utente.create({
     data: {

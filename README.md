@@ -9,6 +9,15 @@ agregado familiar — tudo em **português de Portugal** e com valores em **Kwan
 > pagamentos Pay4all/Multicaixa Express) estão implementadas e ativam-se por
 > configuração (chaves/credenciais e allowlist de rede).
 
+## 🚀 Pôr online (1 clique)
+
+[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/am26dev/PSN/tree/claude/angola-health-portal-uw0mjy)
+
+Carrega no botão, inicia sessão com o GitHub e confirma — a Render cria o site e
+a base de dados sozinha e dá-te um endereço público. **Não precisas de preencher
+nada** para o primeiro teste, e a **primeira conta que criares no site fica
+automaticamente como administrador**. Detalhes em [DEPLOY.md](./DEPLOY.md).
+
 ## Funcionalidades do MVP
 
 - **Contas de Utente** com Bilhete de Identidade (cidadãos angolanos) ou Passaporte (estrangeiros),

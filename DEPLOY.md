@@ -3,24 +3,33 @@
 O Portal de Saúde Nacional é uma app **Next.js + PostgreSQL**. Abaixo está o
 caminho mais rápido para ter um **link público para testar**.
 
-## Opção recomendada: Render (1 clique, via blueprint)
+## A forma mais simples (botão, sem nada para preencher)
 
-O repositório já inclui um `render.yaml` que cria o serviço web **e** a base de
-dados PostgreSQL automaticamente.
+1. Carregar no botão **Deploy to Render** (no topo do `README.md`).
+2. **Iniciar sessão com o GitHub** e autorizar o acesso ao repositório.
+3. Carregar em **Apply / Create** e esperar uns minutos.
 
-1. Criar conta em <https://render.com> e ligar a conta ao GitHub (repo `am26dev/PSN`).
-2. **New → Blueprint** e escolher o repositório/branch `claude/angola-health-portal-uw0mjy`.
-   A Render lê o `render.yaml` e provisiona tudo (web + Postgres + segredos).
-3. Antes do primeiro deploy, definir os segredos no painel do serviço:
-   - `ITAO_API_KEY` — a chave da consulta de BI/NIF (dev.it.ao).
-   - `PSN_ADMIN_DOCS` — o(s) número(s) de BI que devem ser administradores.
-   - (Opcional) chaves `PAY4ALL_*` quando tiver as credenciais do parceiro.
-4. Fazer **Deploy**. No fim, a Render dá um URL público do tipo
-   `https://psn-portal.onrender.com` — é esse o link para testar.
+No fim, a Render mostra um endereço público (ex.: `https://psn-portal.onrender.com`)
+— **é esse o link para testar**. Para um primeiro teste **não precisas de
+preencher nada**: a app funciona sem as chaves (a consulta de BI/NIF entra em
+modo local) e a **primeira conta que criares no site fica automaticamente como
+administrador**.
 
 O schema e os **dados de demonstração** (hospitais, clínicas, farmácias e
-seguradoras) são aplicados automaticamente no deploy (`db:push` + `db:seed`
-idempotente) — não é preciso nenhum passo manual.
+seguradoras) são carregados automaticamente — sem passos manuais.
+
+### Quando quiseres ativar tudo (opcional, depois)
+
+No painel do serviço na Render → **Environment**, define:
+- `ITAO_API_KEY` — a chave da consulta de BI/NIF (dev.it.ao).
+- `PSN_ADMIN_DOCS` — número(s) de BI que devem ser administradores.
+- chaves `PAY4ALL_*` — quando tiveres as credenciais do parceiro.
+
+## Em alternativa: New → Blueprint (manual)
+
+1. Criar conta em <https://render.com> e ligar ao GitHub (repo `am26dev/PSN`).
+2. **New → Blueprint** e escolher a branch `claude/angola-health-portal-uw0mjy`.
+3. **Apply** — a Render lê o `render.yaml` e provisiona tudo (web + Postgres).
 
 ### Notas importantes
 
