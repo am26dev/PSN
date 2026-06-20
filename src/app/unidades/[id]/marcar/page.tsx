@@ -55,6 +55,7 @@ export default async function MarcarPage({
         }))}
         dependentes={dependentes}
         temSeguro={!!utente.seguradoraId}
+        telefoneUtente={utente.telefone}
         valorCentimos={precoConsulta(unidade.tipo)}
       />
     </div>

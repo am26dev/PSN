@@ -67,9 +67,11 @@ export const marcacaoSchema = z.object({
     message: "Data/hora inválida.",
   }),
   motivo: z.string().optional(),
+  telefone: z.string().optional(),
   metodoPagamento: z.enum([
     "MULTICAIXA_EXPRESS",
-    "TRANSFERENCIA_BANCARIA",
+    "REFERENCIA_EMIS",
+    "E_KWANZA",
     "SEGURO_SAUDE",
     "PAGAMENTO_ESTADO",
   ]),

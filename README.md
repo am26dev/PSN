@@ -15,9 +15,31 @@ agregado familiar — tudo em **português de Portugal** e com valores em **Kwan
 - **Agregado familiar** — o responsável adiciona filhos, cônjuge ou pais.
 - **Diretório nacional** de unidades, com pesquisa por nome, tipo e província.
 - **Página da unidade** com especialidades, médicos disponíveis e **seguros aceites** (e atendimento sem seguro).
-- **Marcação de consultas** com escolha de especialidade/médico e **método de pagamento**
-  (Multicaixa Express, Transferência Bancária, Seguro de Saúde, Pagamento ao Estado/RUPE).
+- **Marcação de consultas** com escolha de especialidade/médico e **método de pagamento**.
 - **Ficha de saúde** pessoal (tipo sanguíneo, alergias, doenças crónicas, medicação).
+
+## Pagamentos — Pay4all (é+ / é-Kwanza)
+
+Os pagamentos são processados pelo parceiro **Pay4all, S.A.** (Grupo BAI, Licença BNA nº 426),
+através do produto **é+**, com três canais de cobrança:
+
+| Canal | Como o utente paga |
+|---|---|
+| **Multicaixa Express** | Recebe a cobrança na app MCX Express e confirma com o cartão. |
+| **Referência EMIS** | Paga em qualquer banco/ATM/Multicaixa com Entidade `10111` + referência. |
+| **é-Kwanza** | Lê o código QR na carteira digital é-Kwanza. |
+
+Seguro de Saúde (cobertura da seguradora) e Pagamento ao Estado (RUPE) são tratados fora da Pay4all.
+
+O adaptador (`src/lib/pagamentos/pay4all.ts`) é fiel aos fluxos documentados e **configurável por
+variáveis de ambiente**. Enquanto `PAY4ALL_API_URL`/`PAY4ALL_API_KEY` não estiverem definidos,
+opera em **modo simulado** (gera referências/QR de demonstração) para o fluxo funcionar de ponta a
+ponta. As confirmações de pagamento chegam ao webhook `POST /api/pagamentos/webhook`, validado por
+assinatura HMAC-SHA256.
+
+> Nota: os caminhos de endpoint e os formatos de pedido/resposta estão centralizados em
+> `ENDPOINTS`/`mapearResposta()` e devem ser confirmados com a documentação técnica da Pay4all
+> (fornecida após a adesão).
 
 ## Identidade visual
 

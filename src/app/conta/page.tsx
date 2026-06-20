@@ -9,6 +9,8 @@ import {
   ETIQUETA_ESTADO_MARCACAO,
   COR_ESTADO_MARCACAO,
   ETIQUETA_METODO_PAGAMENTO,
+  ETIQUETA_ESTADO_PAGAMENTO,
+  COR_ESTADO_PAGAMENTO,
 } from "@/lib/etiquetas";
 
 export default async function ContaPage() {
@@ -112,10 +114,22 @@ export default async function ContaPage() {
                     {ETIQUETA_ESTADO_MARCACAO[m.estado]}
                   </span>
                   {m.pagamento && (
-                    <p className="mt-1 text-sm text-gray-500">
-                      {formatarKz(m.pagamento.valorCentimos)} ·{" "}
-                      {ETIQUETA_METODO_PAGAMENTO[m.pagamento.metodo]}
-                    </p>
+                    <div className="mt-1 space-y-1">
+                      <p className="text-sm text-gray-500">
+                        {formatarKz(m.pagamento.valorCentimos)} ·{" "}
+                        {ETIQUETA_METODO_PAGAMENTO[m.pagamento.metodo]}
+                      </p>
+                      <span className={`badge ${COR_ESTADO_PAGAMENTO[m.pagamento.estado]}`}>
+                        {ETIQUETA_ESTADO_PAGAMENTO[m.pagamento.estado]}
+                      </span>
+                      {m.pagamento.estado === "AGUARDA" &&
+                        m.pagamento.referenciaEmis && (
+                          <p className="text-xs text-gray-400">
+                            Entidade {m.pagamento.entidade} · Ref.{" "}
+                            {m.pagamento.referenciaEmis}
+                          </p>
+                        )}
+                    </div>
                   )}
                 </div>
               </li>

@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { utenteAtual } from "@/lib/auth";
 import { marcacaoSchema } from "@/lib/validacao";
 import { precoConsulta } from "@/lib/precos";
+import { iniciarCobranca, dadosPagamentoDaCobranca } from "@/lib/pagamentos/cobranca";
 
 export async function POST(req: Request) {
   const utente = await utenteAtual();
@@ -37,10 +38,7 @@ export async function POST(req: Request) {
       where: { id: d.dependenteId, responsavelId: utente.id },
     });
     if (!dep) {
-      return NextResponse.json(
-        { erro: "Dependente inválido." },
-        { status: 403 },
-      );
+      return NextResponse.json({ erro: "Dependente inválido." }, { status: 403 });
     }
   }
 
@@ -52,9 +50,27 @@ export async function POST(req: Request) {
     );
   }
 
-  const valor = precoConsulta(unidade.tipo);
-  const isento = d.metodoPagamento === "SEGURO_SAUDE" && !!utente.seguradoraId;
+  // O seguro só é aceite se o utente tiver seguradora associada.
+  if (d.metodoPagamento === "SEGURO_SAUDE" && !utente.seguradoraId) {
+    return NextResponse.json(
+      { erro: "Não tem um seguro de saúde associado à sua conta." },
+      { status: 422 },
+    );
+  }
 
+  // A cobrança Multicaixa Express precisa de um telemóvel.
+  const telefone = d.telefone || utente.telefone || undefined;
+  if (d.metodoPagamento === "MULTICAIXA_EXPRESS" && !telefone) {
+    return NextResponse.json(
+      { erro: "Indique o telemóvel para a cobrança Multicaixa Express." },
+      { status: 422 },
+    );
+  }
+
+  const valor = precoConsulta(unidade.tipo);
+  const isento = d.metodoPagamento === "SEGURO_SAUDE";
+
+  // 1) Cria a marcação e o pagamento (a aguardar / isento).
   const marcacao = await prisma.marcacao.create({
     data: {
       utenteId: utente.id,
@@ -73,7 +89,49 @@ export async function POST(req: Request) {
         },
       },
     },
+    include: { pagamento: true },
   });
 
-  return NextResponse.json({ ok: true, id: marcacao.id }, { status: 201 });
+  // 2) Para os canais Pay4all, inicia a cobrança e guarda a referência/QR.
+  let pagamentoInfo: Record<string, unknown> = {
+    metodo: d.metodoPagamento,
+    valorCentimos: valor,
+    estado: marcacao.pagamento?.estado,
+  };
+
+  if (!isento && marcacao.pagamento) {
+    try {
+      const resultado = await iniciarCobranca(d.metodoPagamento, {
+        valorCentimos: valor,
+        referenciaInterna: marcacao.pagamento.id,
+        telefone,
+        descricao: `Consulta — ${unidade.nome}`,
+      });
+      if (resultado) {
+        const pagamento = await prisma.pagamento.update({
+          where: { id: marcacao.pagamento.id },
+          data: dadosPagamentoDaCobranca(resultado),
+        });
+        pagamentoInfo = {
+          metodo: pagamento.metodo,
+          valorCentimos: pagamento.valorCentimos,
+          estado: pagamento.estado,
+          entidade: pagamento.entidade,
+          referenciaEmis: pagamento.referenciaEmis,
+          qrCode: pagamento.qrCode,
+          expiraEm: pagamento.expiraEm,
+          modoSimulado: !resultado.configurado,
+        };
+      }
+    } catch (e) {
+      // A marcação fica criada; o pagamento continua a aguardar e pode ser
+      // reiniciado. Não falha a marcação por causa do gateway.
+      console.error("Falha ao iniciar cobrança Pay4all:", e);
+    }
+  }
+
+  return NextResponse.json(
+    { ok: true, id: marcacao.id, pagamento: pagamentoInfo },
+    { status: 201 },
+  );
 }

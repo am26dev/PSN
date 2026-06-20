@@ -1,4 +1,9 @@
-import type { TipoUnidade, MetodoPagamento, EstadoMarcacao } from "@prisma/client";
+import type {
+  TipoUnidade,
+  MetodoPagamento,
+  EstadoMarcacao,
+  EstadoPagamento,
+} from "@prisma/client";
 
 export const ETIQUETA_TIPO_UNIDADE: Record<TipoUnidade, string> = {
   HOSPITAL_PUBLICO: "Hospital público",
@@ -8,7 +13,8 @@ export const ETIQUETA_TIPO_UNIDADE: Record<TipoUnidade, string> = {
 
 export const ETIQUETA_METODO_PAGAMENTO: Record<MetodoPagamento, string> = {
   MULTICAIXA_EXPRESS: "Multicaixa Express",
-  TRANSFERENCIA_BANCARIA: "Transferência bancária",
+  REFERENCIA_EMIS: "Referência (qualquer banco)",
+  E_KWANZA: "é-Kwanza (QR)",
   SEGURO_SAUDE: "Seguro de saúde",
   PAGAMENTO_ESTADO: "Pagamento ao Estado (RUPE)",
 };
@@ -25,4 +31,20 @@ export const COR_ESTADO_MARCACAO: Record<EstadoMarcacao, string> = {
   CONFIRMADA: "bg-green-100 text-green-700",
   CANCELADA: "bg-angola-red/10 text-angola-red-dark",
   CONCLUIDA: "bg-base-muted text-gray-600",
+};
+
+export const ETIQUETA_ESTADO_PAGAMENTO: Record<EstadoPagamento, string> = {
+  AGUARDA: "A aguardar pagamento",
+  PAGO: "Pago",
+  FALHADO: "Pagamento falhado",
+  EXPIRADO: "Referência expirada",
+  ISENTO: "Coberto pelo seguro",
+};
+
+export const COR_ESTADO_PAGAMENTO: Record<EstadoPagamento, string> = {
+  AGUARDA: "bg-angola-gold/20 text-angola-gold-dark",
+  PAGO: "bg-green-100 text-green-700",
+  FALHADO: "bg-angola-red/10 text-angola-red-dark",
+  EXPIRADO: "bg-angola-red/10 text-angola-red-dark",
+  ISENTO: "bg-green-100 text-green-700",
 };
