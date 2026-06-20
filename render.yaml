@@ -5,6 +5,7 @@
 databases:
   - name: psn-db
     plan: free
+    region: frankfurt # mesma região do serviço web (evita falha de ligação)
     databaseName: psn
     user: psn
 
@@ -17,9 +18,9 @@ services:
     # NODE_ENV=production é definido em runtime; por isso forçamos a instalação
     # das devDependencies (prisma, next, tailwind…) necessárias ao build.
     buildCommand: npm install --include=dev && npm run build
-    # O plano gratuito não suporta preDeployCommand: aplicamos o schema e o seed
-    # (ambos idempotentes) no arranque, quando a base de dados está garantida.
-    startCommand: npm run db:push && npm run db:seed && npm run start
+    # O plano gratuito não suporta preDeployCommand: o arranque (scripts/start.sh)
+    # espera pela base de dados, aplica o schema, carrega os dados e inicia.
+    startCommand: bash scripts/start.sh
     healthCheckPath: /
     envVars:
       - key: NODE_ENV
