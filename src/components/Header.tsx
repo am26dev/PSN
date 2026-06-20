@@ -4,9 +4,11 @@ import { Logo } from "./Logo";
 export function Header({
   autenticado,
   nome,
+  admin,
 }: {
   autenticado: boolean;
   nome: string | null;
+  admin?: boolean;
 }) {
   return (
     <header className="sticky top-0 z-30 border-b border-base-line bg-white/90 backdrop-blur">
@@ -30,6 +32,11 @@ export function Header({
         <div className="flex items-center gap-2">
           {autenticado ? (
             <>
+              {admin && (
+                <Link href="/admin/verificacoes" className="btn-ghost py-2">
+                  Admin
+                </Link>
+              )}
               <Link href="/conta" className="btn-ghost py-2">
                 {nome?.split(" ")[0] ?? "A minha conta"}
               </Link>

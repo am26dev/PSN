@@ -3,6 +3,8 @@ import type {
   MetodoPagamento,
   EstadoMarcacao,
   EstadoPagamento,
+  EstadoVerificacao,
+  TipoDocumento,
 } from "@prisma/client";
 
 export const ETIQUETA_TIPO_UNIDADE: Record<TipoUnidade, string> = {
@@ -47,4 +49,24 @@ export const COR_ESTADO_PAGAMENTO: Record<EstadoPagamento, string> = {
   FALHADO: "bg-angola-red/10 text-angola-red-dark",
   EXPIRADO: "bg-angola-red/10 text-angola-red-dark",
   ISENTO: "bg-green-100 text-green-700",
+};
+
+export const ETIQUETA_TIPO_DOCUMENTO: Record<TipoDocumento, string> = {
+  BI: "Bilhete de Identidade",
+  PASSAPORTE: "Passaporte",
+  AUTORIZACAO_RESIDENCIA: "Autorização de Residência",
+};
+
+export const ETIQUETA_ESTADO_VERIFICACAO: Record<EstadoVerificacao, string> = {
+  PENDENTE: "Por concluir",
+  EM_ANALISE: "Em análise",
+  APROVADO: "Verificada",
+  REJEITADO: "Rejeitada",
+};
+
+export const COR_ESTADO_VERIFICACAO: Record<EstadoVerificacao, string> = {
+  PENDENTE: "bg-base-muted text-gray-600",
+  EM_ANALISE: "bg-angola-gold/20 text-angola-gold-dark",
+  APROVADO: "bg-green-100 text-green-700",
+  REJEITADO: "bg-angola-red/10 text-angola-red-dark",
 };

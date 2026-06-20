@@ -17,6 +17,24 @@ agregado familiar — tudo em **português de Portugal** e com valores em **Kwan
 - **Página da unidade** com especialidades, médicos disponíveis e **seguros aceites** (e atendimento sem seguro).
 - **Marcação de consultas** com escolha de especialidade/médico e **método de pagamento**.
 - **Ficha de saúde** pessoal (tipo sanguíneo, alergias, doenças crónicas, medicação).
+- **Verificação de identidade (KYC)** — ver secção própria.
+
+## Verificação de identidade (KYC)
+
+Módulo nativo para confirmar a identidade do utente: o utente faz upload do
+documento (BI, Passaporte ou Autorização de Residência) e de uma selfie, num
+fluxo passo-a-passo (`/conta/verificacao`); a administração revê e aprova ou
+rejeita (`/admin/verificacoes`). Ao aprovar, o utente fica marcado como
+verificado.
+
+- **Imagens cifradas em repouso** (AES-256-GCM) e servidas apenas por uma rota
+  protegida (`/api/verificacao/imagem/[key]`) acessível só ao dono ou a um
+  administrador — nunca há URL pública dos documentos. `STORAGE_DRIVER=s3` é o
+  encaixe para produção.
+- **Análise honesta:** por omissão valida o formato do documento e encaminha
+  para **revisão manual** (não inventa OCR/biometria). `VERIFICACAO_PROVIDER_URL`
+  é o ponto único onde se liga um fornecedor real de OCR/biometria — ou o SIAC.
+- Administradores definem-se em `PSN_ADMIN_DOCS` (lista de números de documento).
 
 ## Pagamentos — Pay4all (é+ / é-Kwanza)
 

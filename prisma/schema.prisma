@@ -17,6 +17,7 @@ datasource db {
 enum TipoDocumento {
   BI // Bilhete de Identidade de Angola
   PASSAPORTE // Cidadãos estrangeiros
+  AUTORIZACAO_RESIDENCIA // Estrangeiros residentes em Angola
 }
 
 enum Sexo {
@@ -63,10 +64,15 @@ model Utente {
   seguradora     Seguradora?   @relation(fields: [seguradoraId], references: [id])
   numeroApolice  String?
 
+  // Estado de verificação de identidade (KYC)
+  verificado     Boolean       @default(false)
+
   fichaSaude     FichaSaude?
   dependentes    Dependente[]
   marcacoes      Marcacao[]
   sessoes        Sessao[]
+  verificacoes   Verificacao[] @relation("VerificacoesDoUtente")
+  verificacoesRevistas Verificacao[] @relation("VerificacoesRevistas")
 
   criadoEm       DateTime      @default(now())
   atualizadoEm   DateTime      @updatedAt
@@ -294,4 +300,72 @@ model Pagamento {
 
   @@index([referenciaEmis])
   @@index([idParceiro])
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// VERIFICAÇÃO DE IDENTIDADE (KYC)
+// ─────────────────────────────────────────────────────────────────────────────
+
+enum EstadoVerificacao {
+  PENDENTE // criada, ainda sem submissão completa
+  EM_ANALISE // submetida, a aguardar revisão (manual ou automática)
+  APROVADO
+  REJEITADO
+}
+
+enum ResultadoBiometria {
+  PENDENTE
+  APROVADO
+  REJEITADO
+}
+
+model Verificacao {
+  id              String        @id @default(cuid())
+  utenteId        String
+  utente          Utente        @relation("VerificacoesDoUtente", fields: [utenteId], references: [id], onDelete: Cascade)
+
+  // Documento submetido
+  tipoDocumento   TipoDocumento
+  numeroDocumento String
+  nomeCompleto    String?
+  dataNascimento  String?
+  nacionalidade   String?       @default("Angolana")
+
+  estado          EstadoVerificacao @default(PENDENTE)
+
+  // Chaves de armazenamento (imagens cifradas — nunca o ficheiro em claro)
+  imagemFrenteKey String?
+  imagemVersoKey  String?
+  selfieKey       String?
+
+  // Resultados da análise (encaixe para OCR/biometria/SIAC reais)
+  ocrDados        Json?
+  resultadoBiometria ResultadoBiometria @default(PENDENTE)
+  pontuacaoRisco  Float?        // 0 (baixo risco) a 100 (alto risco)
+  motivoRejeicao  String?
+
+  // Revisão administrativa
+  revistoPorId    String?
+  revistoPor      Utente?       @relation("VerificacoesRevistas", fields: [revistoPorId], references: [id])
+  revistoEm       DateTime?
+
+  eventos         VerificacaoEvento[]
+
+  criadoEm        DateTime      @default(now())
+  atualizadoEm    DateTime      @updatedAt
+
+  @@index([utenteId])
+  @@index([estado])
+}
+
+// Trilho de auditoria de cada verificação
+model VerificacaoEvento {
+  id             String      @id @default(cuid())
+  verificacaoId  String
+  verificacao    Verificacao @relation(fields: [verificacaoId], references: [id], onDelete: Cascade)
+  evento         String
+  metadata       Json?
+  criadoEm       DateTime    @default(now())
+
+  @@index([verificacaoId])
 }

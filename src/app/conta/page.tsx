@@ -50,6 +50,26 @@ export default async function ContaPage() {
         </div>
       </div>
 
+      {/* Verificação de identidade */}
+      <Link
+        href="/conta/verificacao"
+        className="card flex items-center justify-between p-5 transition hover:shadow-lg"
+      >
+        <div>
+          <h2 className="font-bold">Verificação de identidade</h2>
+          <p className="text-sm text-gray-500">
+            {utente.verificado
+              ? "A sua identidade está verificada."
+              : "Confirme a sua identidade para acesso completo aos serviços."}
+          </p>
+        </div>
+        {utente.verificado ? (
+          <span className="badge bg-green-100 text-green-700">Verificada ✓</span>
+        ) : (
+          <span className="badge bg-angola-gold/20 text-angola-gold-dark">Verificar</span>
+        )}
+      </Link>
+
       <div className="grid gap-8 lg:grid-cols-2">
         {/* Ficha de saúde */}
         <section className="card p-6">

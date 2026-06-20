@@ -77,5 +77,18 @@ export const marcacaoSchema = z.object({
   ]),
 });
 
+export const iniciarVerificacaoSchema = z.object({
+  tipoDocumento: z.enum(["BI", "PASSAPORTE", "AUTORIZACAO_RESIDENCIA"]),
+  numeroDocumento: z.string().min(5, "Documento inválido."),
+  nomeCompleto: z.string().min(3, "Indique o nome completo."),
+  dataNascimento: z.string().optional(),
+  nacionalidade: z.string().optional(),
+});
+
+export const revisaoVerificacaoSchema = z.object({
+  acao: z.enum(["APROVAR", "REJEITAR"]),
+  motivo: z.string().max(500).optional(),
+});
+
 export type RegistoInput = z.infer<typeof registoSchema>;
 export type LoginInput = z.infer<typeof loginSchema>;

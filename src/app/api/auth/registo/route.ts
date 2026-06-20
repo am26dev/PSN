@@ -32,6 +32,13 @@ export async function POST(req: Request) {
 
   const passwordHash = await criarHashPassword(d.password);
 
+  // Promoção a administrador por configuração (lista de documentos em PSN_ADMIN_DOCS).
+  const adminDocs = (process.env.PSN_ADMIN_DOCS ?? "")
+    .split(",")
+    .map((s) => s.trim().toUpperCase())
+    .filter(Boolean);
+  const papel = adminDocs.includes(d.numeroDocumento) ? "ADMIN" : "UTENTE";
+
   const utente = await prisma.utente.create({
     data: {
       tipoDocumento: d.tipoDocumento,
@@ -44,6 +51,7 @@ export async function POST(req: Request) {
       email: d.email || null,
       provincia: d.provincia || null,
       municipio: d.municipio || null,
+      papel,
       passwordHash,
       fichaSaude: { create: {} },
     },
