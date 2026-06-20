@@ -17,10 +17,9 @@ services:
     # NODE_ENV=production é definido em runtime; por isso forçamos a instalação
     # das devDependencies (prisma, next, tailwind…) necessárias ao build.
     buildCommand: npm install --include=dev && npm run build
-    # Aplica o schema e garante os dados de demonstração antes de cada arranque.
-    # O seed é idempotente (não apaga dados em deploys seguintes).
-    preDeployCommand: npm run db:push && npm run db:seed
-    startCommand: npm run start
+    # O plano gratuito não suporta preDeployCommand: aplicamos o schema e o seed
+    # (ambos idempotentes) no arranque, quando a base de dados está garantida.
+    startCommand: npm run db:push && npm run db:seed && npm run start
     healthCheckPath: /
     envVars:
       - key: NODE_ENV
