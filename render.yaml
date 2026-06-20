@@ -1,0 +1,61 @@
+# Blueprint de deploy do Portal de Saúde Nacional (PSN) — Render.
+# Cria automaticamente o serviço web (Next.js) + base de dados PostgreSQL.
+# Como usar: ver DEPLOY.md.
+
+databases:
+  - name: psn-db
+    plan: free
+    databaseName: psn
+    user: psn
+
+services:
+  - type: web
+    name: psn-portal
+    runtime: node
+    plan: free
+    region: frankfurt
+    # NODE_ENV=production é definido em runtime; por isso forçamos a instalação
+    # das devDependencies (prisma, next, tailwind…) necessárias ao build.
+    buildCommand: npm install --include=dev && npm run build
+    # Aplica o schema à base de dados antes de cada arranque.
+    preDeployCommand: npm run db:push
+    startCommand: npm run start
+    healthCheckPath: /
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        fromDatabase:
+          name: psn-db
+          property: connectionString
+      # Segredos gerados automaticamente pela Render.
+      - key: SESSION_SECRET
+        generateValue: true
+      - key: STORAGE_SECRET
+        generateValue: true
+      - key: SESSION_MAX_AGE
+        value: "28800"
+      # Armazenamento das imagens de verificação (KYC).
+      # No plano gratuito o disco é efémero; para persistência use um disco pago
+      # (mountPath /var/data + STORAGE_DIR=/var/data/uploads) ou o encaixe S3.
+      - key: STORAGE_DRIVER
+        value: local
+      - key: STORAGE_DIR
+        value: /tmp/uploads
+      # Consulta de BI/NIF (dev.it.ao). A chave é um segredo — defina no painel.
+      - key: ITAO_API_URL
+        value: https://dev.it.ao
+      - key: ITAO_API_KEY
+        sync: false
+      # Documentos (BI) com papel de administrador, separados por vírgula.
+      - key: PSN_ADMIN_DOCS
+        sync: false
+      # Pagamentos Pay4all (é+). Opcionais — sem eles o portal usa modo simulado.
+      - key: PAY4ALL_API_URL
+        sync: false
+      - key: PAY4ALL_API_KEY
+        sync: false
+      - key: PAY4ALL_WEBHOOK_SECRET
+        sync: false
+      - key: PAY4ALL_ENTIDADE
+        value: "10111"
