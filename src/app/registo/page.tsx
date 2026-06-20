@@ -37,7 +37,7 @@ export default function RegistoPage() {
     setACarregarSiac(true);
     try {
       const res = await fetch(
-        `/api/siac/lookup?bi=${encodeURIComponent(form.numeroDocumento)}`,
+        `/api/identidade/consultar?numero=${encodeURIComponent(form.numeroDocumento)}`,
       );
       const data = await res.json();
       if (!res.ok) {
@@ -47,13 +47,8 @@ export default function RegistoPage() {
       if (data.dados?.provincia) {
         setForm((f) => ({ ...f, provincia: data.dados.provincia }));
       }
-      if (data.origem === "SIAC" && data.dados) {
-        setForm((f) => ({
-          ...f,
-          nomeCompleto: data.dados.nomeCompleto ?? f.nomeCompleto,
-          dataNascimento: data.dados.dataNascimento?.slice(0, 10) ?? f.dataNascimento,
-          sexo: data.dados.sexo ?? f.sexo,
-        }));
+      if (data.disponivel && data.dados?.nomeCompleto) {
+        setForm((f) => ({ ...f, nomeCompleto: data.dados.nomeCompleto }));
       }
       if (data.aviso) setAvisoSiac(data.aviso);
     } catch {

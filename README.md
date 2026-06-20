@@ -5,8 +5,9 @@ Os Utentes encontram unidades perto de si, consultam especialidades e médicos d
 veem a cobertura das seguradoras, marcam consultas e gerem a sua ficha de saúde e o seu
 agregado familiar — tudo em **português de Portugal** e com valores em **Kwanza (Kz)**.
 
-> Estado: **MVP (v1)**. Algumas integrações externas (SIAC e Multicaixa Express/EMIS)
-> estão preparadas como "encaixes" e entram em funcionamento mediante protocolo institucional.
+> Estado: **MVP (v1)**. As integrações externas (consulta de BI/NIF via dev.it.ao,
+> pagamentos Pay4all/Multicaixa Express) estão implementadas e ativam-se por
+> configuração (chaves/credenciais e allowlist de rede).
 
 ## Funcionalidades do MVP
 
@@ -35,6 +36,24 @@ verificado.
   para **revisão manual** (não inventa OCR/biometria). `VERIFICACAO_PROVIDER_URL`
   é o ponto único onde se liga um fornecedor real de OCR/biometria — ou o SIAC.
 - Administradores definem-se em `PSN_ADMIN_DOCS` (lista de números de documento).
+
+## Consulta de BI / NIF — dev.it.ao
+
+A consulta de dados de cidadãos e empresas usa a API **«Consulta NIF Angola»**
+(`https://dev.it.ao`), que funciona como proxy da fonte oficial (AGT). Em Angola,
+o NIF de uma pessoa singular é o número do seu BI — por isso a consulta de BI usa
+o mesmo endpoint de NIF.
+
+- **Registo:** o botão «Carregar dados» consulta o BI e pré-preenche o nome
+  (`/api/identidade/consultar`).
+- **Verificação de identidade:** para o BI, a análise junta os dados oficiais
+  para apoiar a revisão; o Passaporte permanece em revisão manual.
+- **NIF:** consulta autenticada em `/api/identidade/nif/{nif}`.
+
+Configurar com `ITAO_API_KEY` (a chave é um **segredo** — fica só no `.env`). O
+domínio `dev.it.ao` tem de estar na allowlist de egress de rede do ambiente.
+Sem chave ou sem rede, o portal degrada com elegância (mantém a inferência local
+da província do BI).
 
 ## Pagamentos — Pay4all (é+ / é-Kwanza)
 
@@ -117,12 +136,12 @@ prisma/
 src/
   app/                 # páginas e rotas de API (App Router)
   components/          # componentes de UI
-  lib/                 # auth (Argon2/sessões), validação, documentos (BI), moeda, SIAC
+  lib/                 # auth, validação, documentos (BI), moeda, identidade (dev.it.ao), pagamentos
 ```
 
 ## Próximos passos (pós-MVP)
 
-- Integração real com o **SIAC** (carregamento automático de dados pelo BI).
+- Validação em produção da consulta de BI/NIF (dev.it.ao) e mapeamento final dos campos da resposta.
 - Integração de pagamentos com a **EMIS / Multicaixa Express** e **RUPE**.
 - Notificações (SMS/push) e teleconsulta por vídeo.
 - Painéis para profissionais e unidades de saúde.
