@@ -194,8 +194,19 @@ async function main() {
     especialidades.set(nome, r.id);
   }
 
-  // Unidades (limpamos e recriamos para um seed determinístico)
-  await prisma.unidade.deleteMany({});
+  // Unidades — idempotente: só cria se ainda não houver unidades, para o seed
+  // poder correr em cada deploy sem apagar dados (marcações, etc.).
+  const jaExistem = await prisma.unidade.count();
+  if (jaExistem > 0) {
+    console.log(
+      `Já existem ${jaExistem} unidades — seed de unidades ignorado.`,
+    );
+    console.log(
+      `Concluído: ${SEGURADORAS.length} seguradoras e ${ESPECIALIDADES.length} especialidades garantidas.`,
+    );
+    return;
+  }
+
   for (const u of UNIDADES) {
     await prisma.unidade.create({
       data: {

@@ -17,9 +17,10 @@ dados PostgreSQL automaticamente.
    - (Opcional) chaves `PAY4ALL_*` quando tiver as credenciais do parceiro.
 4. Fazer **Deploy**. No fim, a Render dá um URL público do tipo
    `https://psn-portal.onrender.com` — é esse o link para testar.
-5. **Carregar os dados de demonstração** (uma vez): no separar **Shell** do
-   serviço, correr `npm run db:seed` (cria hospitais, clínicas, farmácias e
-   seguradoras). O `db:push` já corre sozinho a cada deploy.
+
+O schema e os **dados de demonstração** (hospitais, clínicas, farmácias e
+seguradoras) são aplicados automaticamente no deploy (`db:push` + `db:seed`
+idempotente) — não é preciso nenhum passo manual.
 
 ### Notas importantes
 
