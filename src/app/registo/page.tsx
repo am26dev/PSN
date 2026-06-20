@@ -47,6 +47,9 @@ export default function RegistoPage() {
       if (data.dados?.provincia) {
         setForm((f) => ({ ...f, provincia: data.dados.provincia }));
       }
+      if (data.dados?.municipio) {
+        setForm((f) => ({ ...f, municipio: data.dados.municipio }));
+      }
       if (data.disponivel && data.dados?.nomeCompleto) {
         setForm((f) => ({ ...f, nomeCompleto: data.dados.nomeCompleto }));
       }

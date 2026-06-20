@@ -16,19 +16,20 @@ export interface PrefillResultado {
     nomeCompleto?: string;
     nif?: string;
     provincia?: string;
-    situacao?: string;
+    municipio?: string;
+    estado?: string; // situação na fonte oficial (ex.: "Activo")
   };
   aviso?: string;
 }
 
 export async function carregarDadosPorBI(bi: string): Promise<PrefillResultado> {
-  const provincia = provinciaDoBI(bi) ?? undefined;
+  const provinciaLocal = provinciaDoBI(bi) ?? undefined;
 
   if (!estaConfigurado()) {
     return {
       origem: "LOCAL",
       disponivel: false,
-      dados: { provincia },
+      dados: { provincia: provinciaLocal },
       aviso:
         "A consulta automática de dados ainda não está ativa. Confirme os seus dados manualmente.",
     };
@@ -39,19 +40,22 @@ export async function carregarDadosPorBI(bi: string): Promise<PrefillResultado> 
     return {
       origem: "LOCAL",
       disponivel: false,
-      dados: { provincia },
+      dados: { provincia: provinciaLocal },
       aviso: r.erro ?? "Não foi possível obter os dados automaticamente.",
     };
   }
 
+  const d = r.normalizado;
   return {
     origem: "ITAO",
     disponivel: true,
     dados: {
-      nomeCompleto: r.normalizado.nome,
-      nif: r.normalizado.nif,
-      situacao: r.normalizado.situacao,
-      provincia,
+      nomeCompleto: d.nome,
+      nif: d.nif,
+      // Prefere a província da fonte oficial; recorre à inferência do BI.
+      provincia: d.provincia ?? provinciaLocal,
+      municipio: d.municipio,
+      estado: d.estado,
     },
   };
 }

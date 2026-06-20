@@ -5,8 +5,8 @@
  *   (ex.: 003456789LA042). As 2 letras identificam a província de emissão.
  * Passaporte (estrangeiros): alfanumérico, 6 a 9 caracteres.
  *
- * Nota: validamos o FORMATO. A confirmação dos dados reais do cidadão fica
- * dependente da integração com o SIAC (ver src/lib/siac.ts).
+ * Nota: validamos o FORMATO. A confirmação dos dados reais do cidadão é feita
+ * pela consulta à fonte oficial (ver src/lib/identidade/itao.ts).
  */
 
 const BI_REGEX = /^[0-9]{9}[A-Z]{2}[0-9]{3}$/;
@@ -24,8 +24,9 @@ export function validarPassaporte(valor: string): boolean {
   return PASSAPORTE_REGEX.test(normalizarDocumento(valor));
 }
 
-// Mapa das siglas de província nos BI angolanos (2 letras).
-const PROVINCIAS_BI: Record<string, string> = {
+// Mapa dos códigos de província (2 letras) usados no BI e na fonte oficial (AGT).
+const PROVINCIAS: Record<string, string> = {
+  BO: "Bengo",
   LA: "Luanda",
   BG: "Benguela",
   HU: "Huambo",
@@ -45,9 +46,15 @@ const PROVINCIAS_BI: Record<string, string> = {
   ZA: "Zaire",
 };
 
+/** Converte um código de província (ex.: "LA") no nome (ex.: "Luanda"). */
+export function nomeProvincia(codigo: string | null | undefined): string | undefined {
+  if (!codigo) return undefined;
+  const c = codigo.trim().toUpperCase();
+  return PROVINCIAS[c] ?? codigo;
+}
+
 export function provinciaDoBI(valor: string): string | null {
   const v = normalizarDocumento(valor);
   if (!validarBI(v)) return null;
-  const sigla = v.substring(9, 11);
-  return PROVINCIAS_BI[sigla] ?? null;
+  return PROVINCIAS[v.substring(9, 11)] ?? null;
 }

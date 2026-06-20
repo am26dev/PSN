@@ -72,6 +72,33 @@ export default async function AdminVerificacaoDetalhe({
             <dd className="font-medium">{v.dataNascimento ?? "—"}</dd>
           </div>
         </dl>
+
+        {/* Dados da consulta oficial (dev.it.ao), quando disponíveis */}
+        {(() => {
+          const oficial = (v.ocrDados as { consultaOficial?: Record<string, unknown> } | null)
+            ?.consultaOficial;
+          if (!oficial) return null;
+          if (!oficial.encontrado) {
+            return (
+              <p className="mt-4 rounded-lg bg-angola-red/10 px-4 py-2 text-sm text-angola-red-dark">
+                Consulta oficial: documento não encontrado na fonte oficial.
+              </p>
+            );
+          }
+          return (
+            <div className="mt-4 rounded-lg bg-green-50 p-4 text-sm">
+              <p className="font-semibold text-green-800">
+                Confirmado na fonte oficial (dev.it.ao)
+              </p>
+              <dl className="mt-2 grid gap-2 sm:grid-cols-2">
+                {oficial.nome ? <Linha rotulo="Nome" valor={String(oficial.nome)} /> : null}
+                {oficial.nif ? <Linha rotulo="NIF" valor={String(oficial.nif)} /> : null}
+                {oficial.estado ? <Linha rotulo="Estado" valor={String(oficial.estado)} /> : null}
+                {oficial.municipio ? <Linha rotulo="Município" valor={String(oficial.municipio)} /> : null}
+              </dl>
+            </div>
+          );
+        })()}
       </div>
 
       {/* Imagens (servidas pela rota protegida) */}
@@ -126,6 +153,15 @@ export default async function AdminVerificacaoDetalhe({
           ))}
         </ul>
       </section>
+    </div>
+  );
+}
+
+function Linha({ rotulo, valor }: { rotulo: string; valor: string }) {
+  return (
+    <div>
+      <dt className="text-gray-500">{rotulo}</dt>
+      <dd className="font-medium text-gray-800">{valor}</dd>
     </div>
   );
 }

@@ -22,7 +22,13 @@ export interface ResultadoAnalise {
     fonte: string;
     formatoDocumentoValido: boolean;
     observacao: string;
-    consultaOficial?: { encontrado: boolean; nome?: string; nif?: string; situacao?: string };
+    consultaOficial?: {
+      encontrado: boolean;
+      nome?: string;
+      nif?: string;
+      estado?: string;
+      municipio?: string;
+    };
   };
   resultadoBiometria: "PENDENTE" | "APROVADO" | "REJEITADO";
   pontuacaoRisco: number; // 0 (baixo) … 100 (alto)
@@ -62,7 +68,8 @@ export async function analisarVerificacao(
         encontrado: true,
         nome: r.normalizado.nome,
         nif: r.normalizado.nif,
-        situacao: r.normalizado.situacao,
+        estado: r.normalizado.estado,
+        municipio: r.normalizado.municipio,
       };
       risco = Math.max(0, risco - 15); // documento confirmado na fonte oficial
     } else {
