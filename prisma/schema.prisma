@@ -1,0 +1,284 @@
+// Portal de Saúde Nacional (PSN) — Angola
+// Modelo de dados do MVP. Português de Portugal nos nomes de domínio.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// IDENTIDADE E CONTAS
+// ─────────────────────────────────────────────────────────────────────────────
+
+enum TipoDocumento {
+  BI // Bilhete de Identidade de Angola
+  PASSAPORTE // Cidadãos estrangeiros
+}
+
+enum Sexo {
+  MASCULINO
+  FEMININO
+  OUTRO
+}
+
+enum Papel {
+  UTENTE // Cidadão / paciente
+  PROFISSIONAL // Médico / pessoal da unidade
+  ADMIN // Administração do portal
+}
+
+enum Parentesco {
+  FILHO
+  CONJUGE
+  PAI
+  MAE
+  OUTRO
+}
+
+// Utente = utilizador titular da conta
+model Utente {
+  id             String        @id @default(cuid())
+  tipoDocumento  TipoDocumento
+  numeroDocumento String       @unique // número de BI ou Passaporte
+  nomeCompleto   String
+  dataNascimento DateTime
+  sexo           Sexo
+  nacionalidade  String        @default("Angolana")
+  telefone       String?
+  email          String?       @unique
+  provincia      String?
+  municipio      String?
+  morada         String?
+
+  passwordHash   String
+  papel          Papel         @default(UTENTE)
+  ativo          Boolean       @default(true)
+
+  // Seguro de saúde (opcional)
+  seguradoraId   String?
+  seguradora     Seguradora?   @relation(fields: [seguradoraId], references: [id])
+  numeroApolice  String?
+
+  fichaSaude     FichaSaude?
+  dependentes    Dependente[]
+  marcacoes      Marcacao[]
+  sessoes        Sessao[]
+
+  criadoEm       DateTime      @default(now())
+  atualizadoEm   DateTime      @updatedAt
+
+  @@index([numeroDocumento])
+}
+
+// Agregado familiar — dependentes geridos por um Utente responsável
+model Dependente {
+  id              String        @id @default(cuid())
+  responsavelId   String
+  responsavel     Utente        @relation(fields: [responsavelId], references: [id], onDelete: Cascade)
+
+  parentesco      Parentesco
+  tipoDocumento   TipoDocumento
+  numeroDocumento String?
+  nomeCompleto    String
+  dataNascimento  DateTime
+  sexo            Sexo
+
+  marcacoes       Marcacao[]
+  criadoEm        DateTime      @default(now())
+
+  @@index([responsavelId])
+}
+
+// Sessões persistidas (permite revogação/auditoria além do cookie assinado)
+model Sessao {
+  id          String   @id @default(cuid())
+  utenteId    String
+  utente      Utente   @relation(fields: [utenteId], references: [id], onDelete: Cascade)
+  tokenHash   String   @unique
+  userAgent   String?
+  ip          String?
+  expiraEm    DateTime
+  criadoEm    DateTime @default(now())
+
+  @@index([utenteId])
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// FICHA DE SAÚDE
+// ─────────────────────────────────────────────────────────────────────────────
+
+model FichaSaude {
+  id              String   @id @default(cuid())
+  utenteId        String   @unique
+  utente          Utente   @relation(fields: [utenteId], references: [id], onDelete: Cascade)
+
+  tipoSanguineo   String?  // A+, O-, etc.
+  alergias        String?
+  doencasCronicas String?
+  medicacaoAtual  String?
+  observacoes     String?
+
+  atualizadoEm    DateTime @updatedAt
+  criadoEm        DateTime @default(now())
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// REDE DE SAÚDE: UNIDADES, ESPECIALIDADES, MÉDICOS, SEGURADORAS
+// ─────────────────────────────────────────────────────────────────────────────
+
+enum TipoUnidade {
+  HOSPITAL_PUBLICO
+  CLINICA_PRIVADA
+  FARMACIA
+}
+
+model Seguradora {
+  id         String              @id @default(cuid())
+  nome       String              @unique
+  sigla      String?
+  utentes    Utente[]
+  unidades   UnidadeSeguradora[]
+  criadoEm   DateTime            @default(now())
+}
+
+model Especialidade {
+  id        String                 @id @default(cuid())
+  nome      String                 @unique
+  descricao String?
+  unidades  UnidadeEspecialidade[]
+  medicos   Medico[]
+  marcacoes Marcacao[]
+}
+
+model Unidade {
+  id            String                 @id @default(cuid())
+  nome          String
+  tipo          TipoUnidade
+  provincia     String
+  municipio     String
+  morada        String?
+  telefone      String?
+  email         String?
+  latitude      Float?
+  longitude     Float?
+  horario       String?
+  urgencia24h   Boolean                @default(false)
+  ativo         Boolean                @default(true)
+
+  especialidades UnidadeEspecialidade[]
+  medicos        Medico[]
+  seguradoras    UnidadeSeguradora[]
+  marcacoes      Marcacao[]
+
+  criadoEm      DateTime               @default(now())
+
+  @@index([provincia, municipio])
+  @@index([tipo])
+}
+
+// N:N Unidade ↔ Especialidade
+model UnidadeEspecialidade {
+  unidadeId       String
+  especialidadeId String
+  unidade         Unidade       @relation(fields: [unidadeId], references: [id], onDelete: Cascade)
+  especialidade   Especialidade @relation(fields: [especialidadeId], references: [id], onDelete: Cascade)
+
+  @@id([unidadeId, especialidadeId])
+}
+
+// N:N Unidade ↔ Seguradora (cobertura — clínicas e farmácias)
+model UnidadeSeguradora {
+  unidadeId    String
+  seguradoraId String
+  unidade      Unidade    @relation(fields: [unidadeId], references: [id], onDelete: Cascade)
+  seguradora   Seguradora @relation(fields: [seguradoraId], references: [id], onDelete: Cascade)
+
+  @@id([unidadeId, seguradoraId])
+}
+
+model Medico {
+  id              String         @id @default(cuid())
+  nome            String
+  unidadeId       String
+  unidade         Unidade        @relation(fields: [unidadeId], references: [id], onDelete: Cascade)
+  especialidadeId String
+  especialidade   Especialidade  @relation(fields: [especialidadeId], references: [id])
+  numeroOrdem     String?        // Ordem dos Médicos de Angola
+  disponivel      Boolean        @default(true)
+  marcacoes       Marcacao[]
+
+  @@index([unidadeId])
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// MARCAÇÕES E PAGAMENTOS
+// ─────────────────────────────────────────────────────────────────────────────
+
+enum EstadoMarcacao {
+  PENDENTE
+  CONFIRMADA
+  CANCELADA
+  CONCLUIDA
+}
+
+enum MetodoPagamento {
+  MULTICAIXA_EXPRESS
+  TRANSFERENCIA_BANCARIA
+  SEGURO_SAUDE
+  PAGAMENTO_ESTADO // RUPE
+}
+
+enum EstadoPagamento {
+  AGUARDA
+  PAGO
+  FALHADO
+  ISENTO // coberto a 100% por seguro
+}
+
+model Marcacao {
+  id              String         @id @default(cuid())
+
+  // O alvo da consulta é o próprio utente OU um dependente do agregado
+  utenteId        String
+  utente          Utente         @relation(fields: [utenteId], references: [id], onDelete: Cascade)
+  dependenteId    String?
+  dependente      Dependente?    @relation(fields: [dependenteId], references: [id])
+
+  unidadeId       String
+  unidade         Unidade        @relation(fields: [unidadeId], references: [id])
+  especialidadeId String?
+  especialidade   Especialidade? @relation(fields: [especialidadeId], references: [id])
+  medicoId        String?
+  medico          Medico?        @relation(fields: [medicoId], references: [id])
+
+  dataHora        DateTime
+  motivo          String?
+  estado          EstadoMarcacao @default(PENDENTE)
+
+  pagamento       Pagamento?
+
+  criadoEm        DateTime       @default(now())
+  atualizadoEm    DateTime       @updatedAt
+
+  @@index([utenteId])
+  @@index([unidadeId, dataHora])
+}
+
+model Pagamento {
+  id          String          @id @default(cuid())
+  marcacaoId  String          @unique
+  marcacao    Marcacao        @relation(fields: [marcacaoId], references: [id], onDelete: Cascade)
+
+  metodo      MetodoPagamento
+  // Valores em Kwanza (KZ), armazenados em cêntimos para evitar erros de vírgula flutuante
+  valorCentimos Int
+  estado      EstadoPagamento @default(AGUARDA)
+  referencia  String?         // referência Multicaixa / RUPE / comprovativo
+
+  criadoEm    DateTime        @default(now())
+  atualizadoEm DateTime       @updatedAt
+}
