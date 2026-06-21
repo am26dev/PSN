@@ -1,45 +1,38 @@
 import type { TipoUnidade } from "@prisma/client";
 
 /**
- * Imagens do portal.
- *
- * As predefinições usam fotografias reais via picsum.photos (carregadas pelo
- * browser do utilizador e sempre disponíveis — garantem que os banners
- * preenchem). No CMS, o administrador substitui por `logoUrl`/`bannerUrl` reais
- * de cada unidade, que têm sempre prioridade.
+ * Imagens do portal — artwork SVG local (servido do próprio servidor), que
+ * carrega sempre, sem depender de serviços externos. No CMS, o administrador
+ * pode definir `logoUrl`/`bannerUrl` reais, que têm prioridade.
  */
 
-function picsum(seed: string, w: number, h: number): string {
-  return `https://picsum.photos/seed/${encodeURIComponent(seed)}/${w}/${h}`;
-}
-
-const SEED_TIPO: Record<TipoUnidade, string> = {
-  HOSPITAL_PUBLICO: "hospital",
-  UNIDADE_HOSPITALAR: "hospital",
-  CLINICA_PRIVADA: "clinica",
-  CENTRO_MEDICO: "centro-medico",
-  CLINICA_DENTARIA: "clinica-dentaria",
-  LABORATORIO: "laboratorio",
-  FISIOTERAPIA: "fisioterapia",
-  OPTICA: "optica",
-  PRESTADOR_SAUDE: "saude",
-  FARMACIA: "farmacia",
+const ARTE_TIPO: Record<TipoUnidade, string> = {
+  HOSPITAL_PUBLICO: "/img/u/hospital-publico.svg",
+  UNIDADE_HOSPITALAR: "/img/u/hospital-publico.svg",
+  CLINICA_PRIVADA: "/img/u/clinica-privada.svg",
+  CENTRO_MEDICO: "/img/u/clinica-privada.svg",
+  CLINICA_DENTARIA: "/img/u/clinica-privada.svg",
+  LABORATORIO: "/img/u/laboratorio.svg",
+  FISIOTERAPIA: "/img/u/clinica-privada.svg",
+  OPTICA: "/img/u/optica.svg",
+  PRESTADOR_SAUDE: "/img/u/clinica-privada.svg",
+  FARMACIA: "/img/u/farmacia.svg",
 };
 
 export function fotoUnidade(
   tipo: TipoUnidade,
-  id: string,
+  _id: string,
   logoUrl?: string | null,
 ): string {
-  return logoUrl || picsum(`psn-${SEED_TIPO[tipo]}-${id}`, 800, 500);
+  return logoUrl || ARTE_TIPO[tipo] || ARTE_TIPO.CLINICA_PRIVADA;
 }
 
 export function bannerUnidade(
   tipo: TipoUnidade,
-  id: string,
+  _id: string,
   bannerUrl?: string | null,
 ): string {
-  return bannerUrl || picsum(`psn-banner-${SEED_TIPO[tipo]}-${id}`, 1600, 480);
+  return bannerUrl || ARTE_TIPO[tipo] || ARTE_TIPO.CLINICA_PRIVADA;
 }
 
 export interface SlideHero {
@@ -53,28 +46,28 @@ export const SLIDES_HERO: SlideHero[] = [
   {
     titulo: "A saúde de toda a Angola num só portal",
     texto:
-      "Hospitais públicos, clínicas privadas e farmácias — encontre, marque e seja atendido.",
-    imagem: picsum("psn-hero-1", 1600, 600),
+      "Hospitais, clínicas, laboratórios, ópticas e farmácias — encontre, marque e seja atendido.",
+    imagem: "/img/hero/1.svg",
     cta: { texto: "Criar conta com o meu BI", href: "/registo" },
   },
   {
     titulo: "Marque consultas em minutos",
     texto:
       "Escolha a especialidade e o médico, e pague em Kwanzas por Multicaixa Express, referência ou é-Kwanza.",
-    imagem: picsum("psn-hero-2", 1600, 600),
+    imagem: "/img/hero/2.svg",
     cta: { texto: "Encontrar unidade", href: "/directorio" },
   },
   {
     titulo: "Farmácias com a sua cobertura",
     texto: "Veja as farmácias perto de si e quais aceitam o seu seguro de saúde.",
-    imagem: picsum("psn-hero-3", 1600, 600),
+    imagem: "/img/hero/3.svg",
     cta: { texto: "Ver farmácias", href: "/directorio?tipo=FARMACIA" },
   },
   {
     titulo: "A sua identidade, protegida",
     texto:
       "Conta criada com o BI ou Passaporte, ficha de saúde e agregado familiar, com segurança máxima.",
-    imagem: picsum("psn-hero-4", 1600, 600),
+    imagem: "/img/hero/4.svg",
     cta: { texto: "Saber mais", href: "/sobre" },
   },
 ];

@@ -5,12 +5,11 @@ export function Footer() {
     <footer className="mt-16 border-t border-base-line bg-angola-black text-white">
       <div className="mx-auto grid w-full max-w-6xl gap-8 px-4 py-10 md:grid-cols-3">
         <div>
-          <p className="text-lg font-extrabold">
-            <span className="text-white">Portal de Saúde Nacional</span>
-          </p>
-          <p className="mt-2 max-w-xs text-sm text-white/70">
-            A saúde de Angola num só lugar — hospitais públicos, clínicas
-            privadas e farmácias.
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/brand/logotipo-branco-psn.png" alt="PSN" className="h-12 w-auto" />
+          <p className="mt-3 max-w-xs text-sm text-white/70">
+            A saúde de Angola num só lugar — hospitais, clínicas, laboratórios,
+            ópticas e farmácias.
           </p>
         </div>
         <div className="text-sm">
