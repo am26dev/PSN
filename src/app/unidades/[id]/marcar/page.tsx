@@ -8,12 +8,22 @@ import { ETIQUETA_TIPO_UNIDADE } from "@/lib/etiquetas";
 
 export default async function MarcarPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ id: string }>;
+  searchParams: Promise<{ especialidade?: string; remarcar?: string }>;
 }) {
   const { id } = await params;
+  const sp = await searchParams;
   const utente = await utenteAtual();
   if (!utente) redirect(`/entrar?proximo=/unidades/${id}/marcar`);
+
+  // Modo remarcação: confirma que a marcação é deste utente e desta unidade.
+  const remarcar = sp.remarcar
+    ? await prisma.marcacao.findFirst({
+        where: { id: sp.remarcar, utenteId: utente.id, unidadeId: id },
+      })
+    : null;
 
   const unidade = await prisma.unidade.findUnique({
     where: { id },
@@ -36,7 +46,9 @@ export default async function MarcarPage({
         ← Voltar à unidade
       </Link>
       <div>
-        <h1 className="text-2xl font-bold">Marcar consulta</h1>
+        <h1 className="text-2xl font-bold">
+          {remarcar ? "Remarcar consulta" : "Marcar consulta"}
+        </h1>
         <p className="mt-1 text-gray-600">
           {ETIQUETA_TIPO_UNIDADE[unidade.tipo]} · {unidade.nome}
         </p>
@@ -57,6 +69,8 @@ export default async function MarcarPage({
         temSeguro={!!utente.seguradoraId}
         telefoneUtente={utente.telefone}
         valorCentimos={precoConsulta(unidade.tipo)}
+        especialidadePre={sp.especialidade ?? null}
+        remarcarId={remarcar?.id ?? null}
       />
     </div>
   );

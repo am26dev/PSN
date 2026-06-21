@@ -1,5 +1,7 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
+import { Hero } from "@/components/Hero";
+import { SLIDES_HERO } from "@/lib/imagens";
 
 export default async function HomePage() {
   const [hospitais, clinicas, farmacias] = await Promise.all([
@@ -10,39 +12,14 @@ export default async function HomePage() {
 
   return (
     <div className="space-y-16">
-      {/* Herói — 30% vermelho como superfície de marca */}
-      <section className="overflow-hidden rounded-2xl bg-angola-red text-white shadow-card">
-        <div className="grid items-center gap-8 px-6 py-12 md:grid-cols-2 md:px-12 md:py-16">
-          <div>
-            <span className="badge bg-angola-gold text-angola-black">
-              República de Angola
-            </span>
-            <h1 className="mt-4 text-3xl font-extrabold leading-tight md:text-4xl">
-              A saúde de toda a Angola num só portal.
-            </h1>
-            <p className="mt-4 max-w-md text-white/85">
-              Encontre hospitais públicos, clínicas privadas e farmácias perto
-              de si. Veja especialidades e médicos disponíveis, marque consultas
-              e faça a gestão da sua ficha de saúde e do seu agregado familiar.
-            </p>
-            <div className="mt-6 flex flex-wrap gap-3">
-              <Link href="/registo" className="btn-gold">
-                Criar conta com o meu BI
-              </Link>
-              <Link
-                href="/directorio"
-                className="btn-ghost border-white/30 bg-white/10 text-white hover:bg-white/20"
-              >
-                Encontrar unidade
-              </Link>
-            </div>
-          </div>
-          <div className="grid grid-cols-3 gap-3">
-            <Estatistica numero={hospitais} rotulo="Hospitais públicos" />
-            <Estatistica numero={clinicas} rotulo="Clínicas privadas" />
-            <Estatistica numero={farmacias} rotulo="Farmácias" />
-          </div>
-        </div>
+      {/* Hero com 4 slides */}
+      <Hero slides={SLIDES_HERO} />
+
+      {/* Estatísticas da rede */}
+      <section className="grid grid-cols-3 gap-4">
+        <Estatistica numero={hospitais} rotulo="Hospitais públicos" />
+        <Estatistica numero={clinicas} rotulo="Clínicas privadas" />
+        <Estatistica numero={farmacias} rotulo="Farmácias" />
       </section>
 
       {/* Funcionalidades */}
@@ -93,9 +70,9 @@ export default async function HomePage() {
 
 function Estatistica({ numero, rotulo }: { numero: number; rotulo: string }) {
   return (
-    <div className="rounded-xl bg-white/10 p-4 text-center">
-      <p className="text-3xl font-extrabold text-angola-gold">{numero}</p>
-      <p className="mt-1 text-xs text-white/80">{rotulo}</p>
+    <div className="card p-5 text-center">
+      <p className="text-3xl font-extrabold text-angola-red">{numero}</p>
+      <p className="mt-1 text-xs text-gray-500">{rotulo}</p>
     </div>
   );
 }

@@ -1,7 +1,9 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
+import { utenteAtual } from "@/lib/auth";
 import { ETIQUETA_TIPO_UNIDADE } from "@/lib/etiquetas";
+import { fotoUnidade, bannerUnidade } from "@/lib/imagens";
 
 export default async function UnidadePage({
   params,
@@ -23,77 +25,126 @@ export default async function UnidadePage({
 
   const eFarmacia = unidade.tipo === "FARMACIA";
 
+  // Marcação ativa do utente nesta unidade (para oferecer "Remarcar").
+  const utente = await utenteAtual();
+  const marcacaoAtiva = utente
+    ? await prisma.marcacao.findFirst({
+        where: {
+          utenteId: utente.id,
+          unidadeId: unidade.id,
+          estado: { in: ["PENDENTE", "CONFIRMADA"] },
+        },
+        orderBy: { dataHora: "desc" },
+      })
+    : null;
+
+  const medicosPorEspecialidade = (espId: string) =>
+    unidade.medicos.filter((m) => m.especialidadeId === espId);
+
   return (
     <div className="space-y-8">
       <Link href="/directorio" className="text-sm font-semibold text-angola-red">
         ← Voltar ao diretório
       </Link>
 
-      {/* Cabeçalho */}
+      {/* Banner + identidade */}
       <div className="card overflow-hidden">
-        <div className="bg-angola-red px-6 py-6 text-white">
-          <span className="badge bg-white/15 text-white">
-            {ETIQUETA_TIPO_UNIDADE[unidade.tipo]}
-          </span>
-          <h1 className="mt-2 text-2xl font-bold">{unidade.nome}</h1>
-          <p className="mt-1 text-white/85">
-            {unidade.morada ? `${unidade.morada} · ` : ""}
-            {unidade.municipio}, {unidade.provincia}
-          </p>
+        <div className="relative h-56 w-full md:h-64">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={bannerUnidade(unidade.tipo, unidade.id, unidade.bannerUrl)}
+            alt={unidade.nome}
+            className="h-full w-full object-cover"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-angola-black/80 to-transparent" />
+          {unidade.urgencia24h && (
+            <span className="badge absolute right-4 top-4 bg-angola-red text-white">
+              Urgência 24 horas
+            </span>
+          )}
+          <div className="absolute bottom-4 left-4 flex items-end gap-4 md:left-6">
+            <div className="h-20 w-20 overflow-hidden rounded-2xl border-4 border-white bg-white shadow-card">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={fotoUnidade(unidade.tipo, unidade.id, unidade.logoUrl)}
+                alt=""
+                className="h-full w-full object-cover"
+              />
+            </div>
+            <div className="pb-1 text-white">
+              <span className="badge bg-white/20 text-white">
+                {ETIQUETA_TIPO_UNIDADE[unidade.tipo]}
+              </span>
+              <h1 className="mt-1 text-2xl font-bold drop-shadow">{unidade.nome}</h1>
+              <p className="text-sm text-white/90">
+                {unidade.municipio}, {unidade.provincia}
+              </p>
+            </div>
+          </div>
         </div>
+
         <div className="grid gap-4 p-6 sm:grid-cols-3">
           <Info rotulo="Telefone" valor={unidade.telefone ?? "—"} />
           <Info rotulo="Horário" valor={unidade.horario ?? "—"} />
-          <Info
-            rotulo="Urgências"
-            valor={unidade.urgencia24h ? "24 horas" : "Sem urgência permanente"}
-          />
+          <Info rotulo="Morada" valor={unidade.morada ?? "—"} />
         </div>
+
+        {unidade.descricao && (
+          <p className="border-t border-base-line px-6 py-4 text-sm text-gray-600">
+            {unidade.descricao}
+          </p>
+        )}
+
         {!eFarmacia && (
-          <div className="border-t border-base-line p-6">
+          <div className="flex flex-wrap gap-3 border-t border-base-line p-6">
             <Link href={`/unidades/${unidade.id}/marcar`} className="btn-primary">
               Marcar consulta
             </Link>
+            {marcacaoAtiva && (
+              <Link
+                href={`/unidades/${unidade.id}/marcar?remarcar=${marcacaoAtiva.id}`}
+                className="btn-ghost"
+              >
+                Remarcar consulta
+              </Link>
+            )}
           </div>
         )}
       </div>
 
-      {/* Especialidades */}
+      {/* Especialidades — cartões modernos com CTA */}
       {!eFarmacia && unidade.especialidades.length > 0 && (
         <section>
           <h2 className="text-xl font-bold">Especialidades</h2>
-          <div className="mt-3 flex flex-wrap gap-2">
-            {unidade.especialidades.map((e) => (
-              <span key={e.especialidadeId} className="badge bg-base-muted text-gray-700">
-                {e.especialidade.nome}
-              </span>
-            ))}
-          </div>
-        </section>
-      )}
-
-      {/* Médicos */}
-      {!eFarmacia && unidade.medicos.length > 0 && (
-        <section>
-          <h2 className="text-xl font-bold">Médicos</h2>
-          <div className="mt-3 grid gap-3 sm:grid-cols-2">
-            {unidade.medicos.map((m) => (
-              <div key={m.id} className="card flex items-center justify-between p-4">
-                <div>
-                  <p className="font-semibold">{m.nome}</p>
-                  <p className="text-sm text-gray-500">{m.especialidade.nome}</p>
-                </div>
-                <span
-                  className={`badge ${
-                    m.disponivel
-                      ? "bg-green-100 text-green-700"
-                      : "bg-base-muted text-gray-500"
-                  }`}
+          <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {unidade.especialidades.map((e) => {
+              const meds = medicosPorEspecialidade(e.especialidadeId);
+              return (
+                <div
+                  key={e.especialidadeId}
+                  className="card flex flex-col justify-between p-5"
                 >
-                  {m.disponivel ? "Disponível" : "Indisponível"}
-                </span>
-              </div>
-            ))}
+                  <div>
+                    <div className="mb-2 h-1.5 w-10 rounded-full bg-angola-gold" />
+                    <h3 className="font-bold">{e.especialidade.nome}</h3>
+                    <p className="mt-1 text-sm text-gray-500">
+                      {meds.length > 0
+                        ? `${meds.length} médico(s) · ${meds
+                            .slice(0, 2)
+                            .map((m) => m.nome)
+                            .join(", ")}`
+                        : "Disponível por marcação"}
+                    </p>
+                  </div>
+                  <Link
+                    href={`/unidades/${unidade.id}/marcar?especialidade=${e.especialidadeId}`}
+                    className="btn-primary mt-4 w-full py-2"
+                  >
+                    Marcar consulta
+                  </Link>
+                </div>
+              );
+            })}
           </div>
         </section>
       )}
@@ -115,8 +166,7 @@ export default async function UnidadePage({
           </p>
         )}
         <p className="mt-3 text-sm text-gray-500">
-          Atende também utentes <strong>sem seguro</strong>, com pagamento em
-          Kwanzas.
+          Atende também utentes <strong>sem seguro</strong>, com pagamento em Kwanzas.
         </p>
       </section>
     </div>

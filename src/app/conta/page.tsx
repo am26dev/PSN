@@ -39,14 +39,31 @@ export default async function ContaPage() {
   return (
     <div className="space-y-8">
       <div className="card overflow-hidden">
-        <div className="bg-angola-red px-6 py-6 text-white">
-          <p className="text-sm text-white/80">Bem-vindo(a),</p>
-          <h1 className="text-2xl font-bold">{utente.nomeCompleto}</h1>
-          <p className="mt-1 text-sm text-white/80">
-            {utente.tipoDocumento === "BI" ? "BI" : "Passaporte"}:{" "}
-            {utente.numeroDocumento}
-            {utente.seguradora ? ` · Seguro: ${utente.seguradora.nome}` : " · Sem seguro"}
-          </p>
+        <div className="flex items-center justify-between gap-4 bg-angola-red px-6 py-6 text-white">
+          <div className="flex items-center gap-4">
+            <div className="h-16 w-16 shrink-0 overflow-hidden rounded-full border-2 border-white/40 bg-white/15">
+              {utente.avatarKey ? (
+                /* eslint-disable-next-line @next/next/no-img-element */
+                <img src="/api/perfil/foto" alt="" className="h-full w-full object-cover" />
+              ) : (
+                <div className="flex h-full w-full items-center justify-center text-xl font-bold">
+                  {utente.nomeCompleto.split(" ").filter(Boolean).slice(0, 2).map((p) => p[0]).join("").toUpperCase()}
+                </div>
+              )}
+            </div>
+            <div>
+              <p className="text-sm text-white/80">Bem-vindo(a),</p>
+              <h1 className="text-2xl font-bold">{utente.nomeCompleto}</h1>
+              <p className="mt-1 text-sm text-white/80">
+                {utente.tipoDocumento === "BI" ? "BI" : "Passaporte"}:{" "}
+                {utente.numeroDocumento}
+                {utente.seguradora ? ` · Seguro: ${utente.seguradora.nome}` : " · Sem seguro"}
+              </p>
+            </div>
+          </div>
+          <Link href="/conta/perfil" className="btn-gold shrink-0 py-2">
+            Definições
+          </Link>
         </div>
       </div>
 

@@ -92,5 +92,36 @@ export const revisaoVerificacaoSchema = z.object({
   motivo: z.string().max(500).optional(),
 });
 
+export const unidadeSchema = z.object({
+  nome: z.string().min(2, "Indique o nome da unidade."),
+  tipo: z.enum(["HOSPITAL_PUBLICO", "CLINICA_PRIVADA", "FARMACIA"]),
+  provincia: z.string().min(2, "Indique a província."),
+  municipio: z.string().min(2, "Indique o município."),
+  morada: z.string().optional(),
+  telefone: z.string().optional(),
+  horario: z.string().optional(),
+  urgencia24h: z.boolean().optional(),
+  logoUrl: z.string().url("URL inválido.").optional().or(z.literal("")),
+  bannerUrl: z.string().url("URL inválido.").optional().or(z.literal("")),
+  descricao: z.string().max(2000).optional(),
+  ativo: z.boolean().optional(),
+});
+
+export const utenteAdminSchema = z.object({
+  papel: z.enum(["UTENTE", "PROFISSIONAL", "ADMIN"]).optional(),
+  verificado: z.boolean().optional(),
+  ativo: z.boolean().optional(),
+});
+
+export const perfilSchema = z.object({
+  nomeCompleto: z.string().min(3).optional(),
+  telefone: z.string().optional(),
+  email: z.string().email("Email inválido.").optional().or(z.literal("")),
+  nif: z.string().optional(),
+  morada: z.string().optional(),
+  provincia: z.string().optional(),
+  municipio: z.string().optional(),
+});
+
 export type RegistoInput = z.infer<typeof registoSchema>;
 export type LoginInput = z.infer<typeof loginSchema>;

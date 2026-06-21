@@ -68,6 +68,9 @@ model Utente {
   // Estado de verificação de identidade (KYC)
   verificado     Boolean       @default(false)
 
+  // Foto de perfil (ficheiro cifrado no armazenamento)
+  avatarKey      String?
+
   fichaSaude     FichaSaude?
   dependentes    Dependente[]
   marcacoes      Marcacao[]
@@ -175,6 +178,11 @@ model Unidade {
   horario       String?
   urgencia24h   Boolean                @default(false)
   ativo         Boolean                @default(true)
+
+  // Identidade visual (CMS): logótipo, banner e descrição
+  logoUrl       String?
+  bannerUrl     String?
+  descricao     String?
 
   especialidades UnidadeEspecialidade[]
   medicos        Medico[]

@@ -154,11 +154,12 @@ export default async function AdminDashboard() {
         </section>
       </div>
 
-      {/* Atalhos */}
-      <section className="grid gap-4 sm:grid-cols-3">
-        <Atalho href="/admin/verificacoes" titulo="Verificações de identidade" texto="Aprovar ou rejeitar documentos dos utentes." />
-        <Atalho href="/directorio" titulo="Rede de saúde" texto="Ver hospitais, clínicas e farmácias do portal." />
-        <Atalho href="/conta" titulo="A minha conta" texto="Voltar à sua área pessoal." />
+      {/* Atalhos de gestão (CMS) */}
+      <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <Atalho href="/admin/unidades" titulo="Gerir unidades" texto="Adicionar e editar hospitais, clínicas e farmácias." />
+        <Atalho href="/admin/utentes" titulo="Gerir utilizadores" texto="Definir níveis de acesso (utente, profissional, admin)." />
+        <Atalho href="/admin/verificacoes" titulo="Verificações" texto="Aprovar ou rejeitar documentos dos utentes." />
+        <Atalho href="/directorio" titulo="Rede de saúde" texto="Ver o portal como os utentes o veem." />
       </section>
     </div>
   );

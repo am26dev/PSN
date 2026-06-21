@@ -29,6 +29,8 @@ export function MarcacaoForm({
   temSeguro,
   telefoneUtente,
   valorCentimos,
+  especialidadePre = null,
+  remarcarId = null,
 }: {
   unidadeId: string;
   especialidades: Opcao[];
@@ -37,12 +39,14 @@ export function MarcacaoForm({
   temSeguro: boolean;
   telefoneUtente: string | null;
   valorCentimos: number;
+  especialidadePre?: string | null;
+  remarcarId?: string | null;
 }) {
   const router = useRouter();
   const [erro, setErro] = useState<string | null>(null);
   const [aSubmeter, setASubmeter] = useState(false);
   const [resultado, setResultado] = useState<PagamentoResultado | null>(null);
-  const [especialidadeId, setEspecialidadeId] = useState("");
+  const [especialidadeId, setEspecialidadeId] = useState(especialidadePre ?? "");
   const [form, setForm] = useState({
     paraQuem: "EU",
     dependenteId: "",
@@ -62,6 +66,28 @@ export function MarcacaoForm({
     setErro(null);
     setASubmeter(true);
     try {
+      // Modo remarcação: atualiza a marcação existente (nova data/especialidade).
+      if (remarcarId) {
+        const res = await fetch(`/api/marcacoes/${remarcarId}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            especialidadeId: especialidadeId || undefined,
+            medicoId: form.medicoId || undefined,
+            dataHora: form.dataHora,
+            motivo: form.motivo || undefined,
+          }),
+        });
+        const data = await res.json();
+        if (!res.ok) {
+          setErro(data.erro ?? "Não foi possível remarcar a consulta.");
+          return;
+        }
+        router.push("/conta?remarcacao=ok");
+        router.refresh();
+        return;
+      }
+
       const res = await fetch("/api/marcacoes", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -176,39 +202,43 @@ export function MarcacaoForm({
         />
       </div>
 
-      {/* Pagamento */}
-      <div>
-        <label className="label">Método de pagamento</label>
-        <select
-          className="input"
-          value={form.metodoPagamento}
-          onChange={(e) => setForm((f) => ({ ...f, metodoPagamento: e.target.value }))}
-        >
-          <option value="MULTICAIXA_EXPRESS">Multicaixa Express</option>
-          <option value="REFERENCIA_EMIS">Referência (pagar em qualquer banco/ATM)</option>
-          <option value="E_KWANZA">é-Kwanza (código QR)</option>
-          {temSeguro && <option value="SEGURO_SAUDE">Seguro de saúde</option>}
-          <option value="PAGAMENTO_ESTADO">Pagamento ao Estado (RUPE)</option>
-        </select>
-        <p className="mt-1 text-xs text-gray-400">
-          Pagamentos processados pela Pay4all (é+). Seguro e RUPE são tratados à parte.
-        </p>
-      </div>
+      {/* Pagamento — não se aplica na remarcação (já pago) */}
+      {!remarcarId && (
+        <>
+          <div>
+            <label className="label">Método de pagamento</label>
+            <select
+              className="input"
+              value={form.metodoPagamento}
+              onChange={(e) => setForm((f) => ({ ...f, metodoPagamento: e.target.value }))}
+            >
+              <option value="MULTICAIXA_EXPRESS">Multicaixa Express</option>
+              <option value="REFERENCIA_EMIS">Referência (pagar em qualquer banco/ATM)</option>
+              <option value="E_KWANZA">é-Kwanza (código QR)</option>
+              {temSeguro && <option value="SEGURO_SAUDE">Seguro de saúde</option>}
+              <option value="PAGAMENTO_ESTADO">Pagamento ao Estado (RUPE)</option>
+            </select>
+            <p className="mt-1 text-xs text-gray-400">
+              Pagamentos processados pela Pay4all (é+). Seguro e RUPE são tratados à parte.
+            </p>
+          </div>
 
-      {form.metodoPagamento === "MULTICAIXA_EXPRESS" && (
-        <div>
-          <label className="label">Telemóvel para a cobrança</label>
-          <input
-            className="input"
-            placeholder="+244 9XX XXX XXX"
-            value={form.telefone}
-            onChange={(e) => setForm((f) => ({ ...f, telefone: e.target.value }))}
-            required
-          />
-          <p className="mt-1 text-xs text-gray-400">
-            Vai receber a cobrança na app Multicaixa Express para confirmar.
-          </p>
-        </div>
+          {form.metodoPagamento === "MULTICAIXA_EXPRESS" && (
+            <div>
+              <label className="label">Telemóvel para a cobrança</label>
+              <input
+                className="input"
+                placeholder="+244 9XX XXX XXX"
+                value={form.telefone}
+                onChange={(e) => setForm((f) => ({ ...f, telefone: e.target.value }))}
+                required
+              />
+              <p className="mt-1 text-xs text-gray-400">
+                Vai receber a cobrança na app Multicaixa Express para confirmar.
+              </p>
+            </div>
+          )}
+        </>
       )}
 
       <div className="flex items-center justify-between rounded-xl bg-base-soft px-4 py-3">
@@ -225,7 +255,11 @@ export function MarcacaoForm({
       )}
 
       <button type="submit" disabled={aSubmeter} className="btn-primary w-full">
-        {aSubmeter ? "A marcar…" : "Confirmar marcação"}
+        {aSubmeter
+          ? "A processar…"
+          : remarcarId
+            ? "Confirmar remarcação"
+            : "Confirmar marcação"}
       </button>
     </form>
   );
