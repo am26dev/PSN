@@ -80,6 +80,7 @@ export async function POST(req: Request) {
       medicoId: d.medicoId ?? null,
       dataHora: data,
       motivo: d.motivo ?? null,
+      referenciaMedica: d.referenciaMedica ?? null,
       estado: "PENDENTE",
       pagamento: {
         create: {

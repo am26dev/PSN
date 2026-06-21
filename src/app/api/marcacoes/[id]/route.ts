@@ -10,6 +10,7 @@ const remarcarSchema = z.object({
   especialidadeId: z.string().optional(),
   medicoId: z.string().optional(),
   motivo: z.string().optional(),
+  referenciaMedica: z.string().optional(),
 });
 
 /** Remarcar uma consulta (alterar data/especialidade/médico). */
@@ -67,6 +68,7 @@ export async function PATCH(
       especialidadeId: d.especialidadeId ?? marcacao.especialidadeId,
       medicoId: d.medicoId ?? marcacao.medicoId,
       motivo: d.motivo ?? marcacao.motivo,
+      referenciaMedica: d.referenciaMedica ?? marcacao.referenciaMedica,
       estado: "PENDENTE",
     },
   });

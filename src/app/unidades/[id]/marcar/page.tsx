@@ -5,6 +5,7 @@ import { utenteAtual } from "@/lib/auth";
 import { MarcacaoForm } from "@/components/MarcacaoForm";
 import { precoConsulta } from "@/lib/precos";
 import { ETIQUETA_TIPO_UNIDADE } from "@/lib/etiquetas";
+import { bannerUnidade } from "@/lib/imagens";
 
 export default async function MarcarPage({
   params,
@@ -37,7 +38,7 @@ export default async function MarcarPage({
 
   const dependentes = await prisma.dependente.findMany({
     where: { responsavelId: utente.id },
-    select: { id: true, nomeCompleto: true },
+    select: { id: true, nomeCompleto: true, parentesco: true },
   });
 
   return (
@@ -45,13 +46,25 @@ export default async function MarcarPage({
       <Link href={`/unidades/${id}`} className="text-sm font-semibold text-angola-red">
         ← Voltar à unidade
       </Link>
-      <div>
-        <h1 className="text-2xl font-bold">
-          {remarcar ? "Remarcar consulta" : "Marcar consulta"}
-        </h1>
-        <p className="mt-1 text-gray-600">
-          {ETIQUETA_TIPO_UNIDADE[unidade.tipo]} · {unidade.nome}
-        </p>
+
+      {/* Banner da unidade */}
+      <div className="relative h-40 w-full overflow-hidden rounded-2xl shadow-card">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={bannerUnidade(unidade.tipo, unidade.id, unidade.bannerUrl)}
+          alt={unidade.nome}
+          className="h-full w-full object-cover"
+        />
+        <div className="absolute inset-0 bg-gradient-to-r from-angola-black/85 to-angola-red/40" />
+        <div className="absolute inset-0 flex flex-col justify-center px-6 text-white">
+          <span className="badge w-fit bg-angola-gold text-angola-black">
+            {remarcar ? "Remarcar consulta" : "Marcar consulta"}
+          </span>
+          <h1 className="mt-2 text-2xl font-bold drop-shadow">{unidade.nome}</h1>
+          <p className="text-sm text-white/90">
+            {ETIQUETA_TIPO_UNIDADE[unidade.tipo]} · {unidade.municipio}, {unidade.provincia}
+          </p>
+        </div>
       </div>
 
       <MarcacaoForm

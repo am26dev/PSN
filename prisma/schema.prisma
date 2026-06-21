@@ -274,6 +274,7 @@ model Marcacao {
 
   dataHora        DateTime
   motivo          String?
+  referenciaMedica String?       // referência/credencial médica indicada pelo utente
   estado          EstadoMarcacao @default(PENDENTE)
 
   pagamento       Pagamento?

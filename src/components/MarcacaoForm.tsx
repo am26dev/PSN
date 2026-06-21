@@ -10,6 +10,14 @@ interface Opcao {
   nome: string;
 }
 
+const PARENTESCO_ROTULO: Record<string, string> = {
+  FILHO: "Filho(a)",
+  CONJUGE: "Cônjuge",
+  PAI: "Pai",
+  MAE: "Mãe",
+  OUTRO: "Parente",
+};
+
 interface PagamentoResultado {
   metodo: string;
   valorCentimos: number;
@@ -35,7 +43,7 @@ export function MarcacaoForm({
   unidadeId: string;
   especialidades: Opcao[];
   medicos: { id: string; nome: string; especialidadeId: string }[];
-  dependentes: { id: string; nomeCompleto: string }[];
+  dependentes: { id: string; nomeCompleto: string; parentesco: string }[];
   temSeguro: boolean;
   telefoneUtente: string | null;
   valorCentimos: number;
@@ -47,12 +55,13 @@ export function MarcacaoForm({
   const [aSubmeter, setASubmeter] = useState(false);
   const [resultado, setResultado] = useState<PagamentoResultado | null>(null);
   const [especialidadeId, setEspecialidadeId] = useState(especialidadePre ?? "");
+  // "EU" ou o id de um dependente do agregado.
+  const [alvo, setAlvo] = useState("EU");
   const [form, setForm] = useState({
-    paraQuem: "EU",
-    dependenteId: "",
     medicoId: "",
     dataHora: "",
     motivo: "",
+    referenciaMedica: "",
     metodoPagamento: "MULTICAIXA_EXPRESS",
     telefone: telefoneUtente ?? "",
   });
@@ -76,6 +85,7 @@ export function MarcacaoForm({
             medicoId: form.medicoId || undefined,
             dataHora: form.dataHora,
             motivo: form.motivo || undefined,
+            referenciaMedica: form.referenciaMedica || undefined,
           }),
         });
         const data = await res.json();
@@ -95,9 +105,10 @@ export function MarcacaoForm({
           unidadeId,
           especialidadeId: especialidadeId || undefined,
           medicoId: form.medicoId || undefined,
-          dependenteId: form.paraQuem === "DEP" ? form.dependenteId : undefined,
+          dependenteId: alvo === "EU" ? undefined : alvo,
           dataHora: form.dataHora,
           motivo: form.motivo || undefined,
+          referenciaMedica: form.referenciaMedica || undefined,
           metodoPagamento: form.metodoPagamento,
           telefone: form.telefone || undefined,
         }),
@@ -125,28 +136,19 @@ export function MarcacaoForm({
       {/* Para quem */}
       <div>
         <label className="label">Para quem é a consulta?</label>
-        <select
-          className="input"
-          value={form.paraQuem}
-          onChange={(e) => setForm((f) => ({ ...f, paraQuem: e.target.value }))}
-        >
+        <select className="input" value={alvo} onChange={(e) => setAlvo(e.target.value)}>
           <option value="EU">Para mim</option>
-          {dependentes.length > 0 && (
-            <option value="DEP">Para um dependente do meu agregado</option>
-          )}
+          {dependentes.map((d) => (
+            <option key={d.id} value={d.id}>
+              {PARENTESCO_ROTULO[d.parentesco] ?? "Parente"}: {d.nomeCompleto}
+            </option>
+          ))}
         </select>
-        {form.paraQuem === "DEP" && (
-          <select
-            className="input mt-3"
-            value={form.dependenteId}
-            onChange={(e) => setForm((f) => ({ ...f, dependenteId: e.target.value }))}
-            required
-          >
-            <option value="">Selecione o dependente…</option>
-            {dependentes.map((d) => (
-              <option key={d.id} value={d.id}>{d.nomeCompleto}</option>
-            ))}
-          </select>
+        {dependentes.length === 0 && (
+          <p className="mt-1 text-xs text-gray-400">
+            Para marcar para um cônjuge, filho(a) ou parente, adicione-o primeiro
+            em “O meu agregado familiar”.
+          </p>
         )}
       </div>
 
@@ -199,6 +201,16 @@ export function MarcacaoForm({
           className="input min-h-[80px]"
           value={form.motivo}
           onChange={(e) => setForm((f) => ({ ...f, motivo: e.target.value }))}
+        />
+      </div>
+
+      <div>
+        <label className="label">Referência médica (opcional)</label>
+        <input
+          className="input"
+          placeholder="Nº da credencial / referência do médico que o encaminhou"
+          value={form.referenciaMedica}
+          onChange={(e) => setForm((f) => ({ ...f, referenciaMedica: e.target.value }))}
         />
       </div>
 

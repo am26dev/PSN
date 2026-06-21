@@ -8,7 +8,7 @@ export default function SobrePage() {
         <div className="relative h-72 w-full">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
-            src="https://images.unsplash.com/photo-1504813184591-01572f98c85f?auto=format&fit=crop&w=1600&q=70"
+            src="https://picsum.photos/seed/psn-sobre-banner/1600/600"
             alt=""
             className="h-full w-full object-cover"
           />
@@ -46,7 +46,7 @@ export default function SobrePage() {
         <div className="overflow-hidden rounded-2xl shadow-card">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
-            src="https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?auto=format&fit=crop&w=900&q=70"
+            src="https://picsum.photos/seed/psn-sobre-utentes/900/600"
             alt=""
             className="h-72 w-full object-cover"
           />
