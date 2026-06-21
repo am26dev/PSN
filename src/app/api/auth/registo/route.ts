@@ -54,6 +54,7 @@ export async function POST(req: Request) {
       telefone: d.telefone || null,
       email: d.email || null,
       nif: d.nif || null,
+      morada: d.morada || null,
       provincia: d.provincia || null,
       municipio: d.municipio || null,
       papel,

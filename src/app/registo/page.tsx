@@ -22,6 +22,7 @@ export default function RegistoPage() {
     telefone: "",
     email: "",
     nif: "",
+    morada: "",
     provincia: "",
     municipio: "",
     password: "",
@@ -54,9 +55,9 @@ export default function RegistoPage() {
       if (data.disponivel && data.dados?.nomeCompleto) {
         setForm((f) => ({ ...f, nomeCompleto: data.dados.nomeCompleto }));
       }
-      if (data.dados?.nif) {
-        setForm((f) => ({ ...f, nif: data.dados.nif }));
-      }
+      if (data.dados?.nif) setForm((f) => ({ ...f, nif: data.dados.nif }));
+      if (data.dados?.telefone) setForm((f) => ({ ...f, telefone: data.dados.telefone }));
+      if (data.dados?.morada) setForm((f) => ({ ...f, morada: data.dados.morada }));
       if (data.aviso) setAvisoSiac(data.aviso);
     } catch {
       setErro("Falha de ligação ao validar o BI.");
@@ -223,14 +224,24 @@ export default function RegistoPage() {
           </div>
         </div>
 
-        <div>
-          <label className="label">NIF (opcional — para empresas)</label>
-          <input
-            className="input"
-            placeholder="Número de Identificação Fiscal"
-            value={form.nif}
-            onChange={(e) => atualizar("nif", e.target.value.toUpperCase())}
-          />
+        <div className="grid gap-5 sm:grid-cols-2">
+          <div>
+            <label className="label">NIF (opcional — para empresas)</label>
+            <input
+              className="input"
+              placeholder="Número de Identificação Fiscal"
+              value={form.nif}
+              onChange={(e) => atualizar("nif", e.target.value.toUpperCase())}
+            />
+          </div>
+          <div>
+            <label className="label">Morada (opcional)</label>
+            <input
+              className="input"
+              value={form.morada}
+              onChange={(e) => atualizar("morada", e.target.value)}
+            />
+          </div>
         </div>
 
         <div>

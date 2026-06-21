@@ -1,6 +1,56 @@
-import { PrismaClient, type TipoUnidade } from "@prisma/client";
+import { PrismaClient, type TipoUnidade, type Papel } from "@prisma/client";
+import argon2 from "argon2";
 
 const prisma = new PrismaClient();
+
+// Contas de teste criadas automaticamente no arranque (para login imediato).
+const UTENTES_TESTE: {
+  numeroDocumento: string;
+  nomeCompleto: string;
+  sexo: "MASCULINO" | "FEMININO";
+  papel: Papel;
+  password: string;
+  telefone?: string;
+  provincia?: string;
+  municipio?: string;
+}[] = [
+  {
+    numeroDocumento: "004952656LA049",
+    nomeCompleto: "Alfredo Cutunga Muanza",
+    sexo: "MASCULINO",
+    papel: "ADMIN",
+    password: "Admin2026",
+    provincia: "Luanda",
+    municipio: "Cazenga",
+  },
+  {
+    numeroDocumento: "003456789LA042",
+    nomeCompleto: "Maria João Teixeira",
+    sexo: "FEMININO",
+    papel: "UTENTE",
+    password: "Utente2026",
+    provincia: "Luanda",
+    municipio: "Luanda",
+  },
+  {
+    numeroDocumento: "006151112LA041",
+    nomeCompleto: "Carlos Domingos Neto",
+    sexo: "MASCULINO",
+    papel: "UTENTE",
+    password: "Utente2026",
+    provincia: "Luanda",
+    municipio: "Belas",
+  },
+  {
+    numeroDocumento: "009988776BG011",
+    nomeCompleto: "Ana Pereira dos Santos",
+    sexo: "FEMININO",
+    papel: "UTENTE",
+    password: "Utente2026",
+    provincia: "Benguela",
+    municipio: "Benguela",
+  },
+];
 
 // Seguradoras de saúde com presença em Angola (dados ilustrativos do MVP).
 const SEGURADORAS = [
@@ -193,6 +243,29 @@ async function main() {
     });
     especialidades.set(nome, r.id);
   }
+
+  // Contas de teste (sempre garantidas, de forma idempotente).
+  for (const u of UTENTES_TESTE) {
+    const passwordHash = await argon2.hash(u.password, { type: argon2.argon2id });
+    await prisma.utente.upsert({
+      where: { numeroDocumento: u.numeroDocumento },
+      update: { papel: u.papel, nomeCompleto: u.nomeCompleto, passwordHash },
+      create: {
+        tipoDocumento: "BI",
+        numeroDocumento: u.numeroDocumento,
+        nomeCompleto: u.nomeCompleto,
+        dataNascimento: new Date("1990-01-01"),
+        sexo: u.sexo,
+        papel: u.papel,
+        telefone: u.telefone ?? null,
+        provincia: u.provincia ?? null,
+        municipio: u.municipio ?? null,
+        passwordHash,
+        fichaSaude: { create: {} },
+      },
+    });
+  }
+  console.log(`Contas de teste garantidas: ${UTENTES_TESTE.length}.`);
 
   // Unidades — idempotente: só cria se ainda não houver unidades, para o seed
   // poder correr em cada deploy sem apagar dados (marcações, etc.).

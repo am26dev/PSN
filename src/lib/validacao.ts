@@ -28,6 +28,7 @@ export const registoSchema = z
     telefone: z.string().optional(),
     email: z.string().email("Email inválido.").optional().or(z.literal("")),
     nif: z.string().optional(),
+    morada: z.string().optional(),
     provincia: z.string().optional(),
     municipio: z.string().optional(),
     password: passwordSchema,

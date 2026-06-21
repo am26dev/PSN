@@ -46,11 +46,21 @@ const PROVINCIAS: Record<string, string> = {
   ZA: "Zaire",
 };
 
-/** Converte um código de província (ex.: "LA") no nome (ex.: "Luanda"). */
+/** Converte um código de província (ex.: "LA") ou nome no nome canónico (ex.: "Luanda"). */
 export function nomeProvincia(codigo: string | null | undefined): string | undefined {
   if (!codigo) return undefined;
-  const c = codigo.trim().toUpperCase();
-  return PROVINCIAS[c] ?? codigo;
+  const up = codigo.trim().toUpperCase();
+  // 1) Código de 2 letras (ex.: "LA").
+  if (PROVINCIAS[up]) return PROVINCIAS[up];
+  // 2) Nome completo, ignorando maiúsculas e acentos (ex.: "LUANDA" → "Luanda").
+  const marcasAcento = new RegExp("[\\u0300-\\u036f]", "g");
+  const semAcento = (s: string) =>
+    s.normalize("NFD").replace(marcasAcento, "").toUpperCase();
+  const alvo = semAcento(codigo);
+  for (const nome of Object.values(PROVINCIAS)) {
+    if (semAcento(nome) === alvo) return nome;
+  }
+  return codigo; // desconhecido — devolve como está
 }
 
 export function provinciaDoBI(valor: string): string | null {

@@ -15,6 +15,8 @@ export interface PrefillResultado {
   dados: {
     nomeCompleto?: string;
     nif?: string;
+    telefone?: string;
+    morada?: string;
     provincia?: string;
     municipio?: string;
     estado?: string; // situação na fonte oficial (ex.: "Activo")
@@ -52,6 +54,8 @@ export async function carregarDadosPorBI(bi: string): Promise<PrefillResultado> 
     dados: {
       nomeCompleto: d.nome,
       nif: d.nif,
+      telefone: d.telefone,
+      morada: d.morada,
       // Prefere a província da fonte oficial; recorre à inferência do BI.
       provincia: d.provincia ?? provinciaLocal,
       municipio: d.municipio,
