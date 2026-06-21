@@ -21,6 +21,7 @@ export default function RegistoPage() {
     sexo: "MASCULINO",
     telefone: "",
     email: "",
+    nif: "",
     provincia: "",
     municipio: "",
     password: "",
@@ -52,6 +53,9 @@ export default function RegistoPage() {
       }
       if (data.disponivel && data.dados?.nomeCompleto) {
         setForm((f) => ({ ...f, nomeCompleto: data.dados.nomeCompleto }));
+      }
+      if (data.dados?.nif) {
+        setForm((f) => ({ ...f, nif: data.dados.nif }));
       }
       if (data.aviso) setAvisoSiac(data.aviso);
     } catch {
@@ -217,6 +221,16 @@ export default function RegistoPage() {
               onChange={(e) => atualizar("municipio", e.target.value)}
             />
           </div>
+        </div>
+
+        <div>
+          <label className="label">NIF (opcional — para empresas)</label>
+          <input
+            className="input"
+            placeholder="Número de Identificação Fiscal"
+            value={form.nif}
+            onChange={(e) => atualizar("nif", e.target.value.toUpperCase())}
+          />
         </div>
 
         <div>

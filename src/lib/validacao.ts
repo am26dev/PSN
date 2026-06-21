@@ -27,6 +27,7 @@ export const registoSchema = z
     sexo: z.enum(["MASCULINO", "FEMININO", "OUTRO"]),
     telefone: z.string().optional(),
     email: z.string().email("Email inválido.").optional().or(z.literal("")),
+    nif: z.string().optional(),
     provincia: z.string().optional(),
     municipio: z.string().optional(),
     password: passwordSchema,

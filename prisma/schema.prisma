@@ -49,6 +49,7 @@ model Utente {
   dataNascimento DateTime
   sexo           Sexo
   nacionalidade  String        @default("Angolana")
+  nif            String?       // Número de Identificação Fiscal (sobretudo empresas)
   telefone       String?
   email          String?       @unique
   provincia      String?
