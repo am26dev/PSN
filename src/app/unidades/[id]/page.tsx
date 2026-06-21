@@ -42,6 +42,15 @@ export default async function UnidadePage({
   const medicosPorEspecialidade = (espId: string) =>
     unidade.medicos.filter((m) => m.especialidadeId === espId);
 
+  // Outras unidades da mesma rede (ex.: a clínica tem várias unidades).
+  const unidadesRede = unidade.rede
+    ? await prisma.unidade.findMany({
+        where: { rede: unidade.rede, ativo: true, id: { not: unidade.id } },
+        orderBy: [{ provincia: "asc" }, { municipio: "asc" }],
+        select: { id: true, nome: true, provincia: true, municipio: true, urgencia24h: true },
+      })
+    : [];
+
   return (
     <div className="space-y-8">
       <Link href="/directorio" className="text-sm font-semibold text-angola-red">
@@ -112,6 +121,39 @@ export default async function UnidadePage({
           </div>
         )}
       </div>
+
+      {/* Rede — outras unidades da mesma marca */}
+      {unidade.rede && unidadesRede.length > 0 && (
+        <section className="card p-6">
+          <h2 className="text-xl font-bold">
+            Rede {unidade.rede} — outras unidades
+          </h2>
+          <p className="mt-1 text-sm text-gray-500">
+            Esta unidade faz parte de uma rede com {unidadesRede.length + 1}{" "}
+            unidades. Escolha a que lhe for mais conveniente:
+          </p>
+          <div className="mt-4 grid gap-3 sm:grid-cols-2">
+            {unidadesRede.map((u) => (
+              <Link
+                key={u.id}
+                href={`/unidades/${u.id}`}
+                className="flex items-center justify-between rounded-xl border border-base-line p-4 transition hover:bg-base-soft"
+              >
+                <div>
+                  <p className="font-medium">{u.municipio}</p>
+                  <p className="text-sm text-gray-500">{u.provincia}</p>
+                </div>
+                <span className="flex items-center gap-2 text-sm text-angola-red">
+                  {u.urgencia24h && (
+                    <span className="badge bg-angola-red/10 text-angola-red-dark">24h</span>
+                  )}
+                  Ver →
+                </span>
+              </Link>
+            ))}
+          </div>
+        </section>
+      )}
 
       {/* Especialidades — cartões modernos com CTA */}
       {!eFarmacia && unidade.especialidades.length > 0 && (

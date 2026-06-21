@@ -184,6 +184,9 @@ model Unidade {
   logoUrl       String?
   bannerUrl     String?
   descricao     String?
+  // Rede/marca a que pertence (ex.: "Clínica Sagrada Esperança") — agrupa
+  // unidades da mesma rede em vários municípios.
+  rede          String?
 
   especialidades UnidadeEspecialidade[]
   medicos        Medico[]
@@ -194,6 +197,7 @@ model Unidade {
 
   @@index([provincia, municipio])
   @@index([tipo])
+  @@index([rede])
 }
 
 // N:N Unidade ↔ Especialidade

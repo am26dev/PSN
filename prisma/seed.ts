@@ -68,6 +68,12 @@ const SEGURADORAS = [
   { nome: "AAA Seguros", sigla: "AAA", logoUrl: logo("aaaseguros.co.ao") },
   { nome: "Prudencial Seguros", sigla: "PRUD", logoUrl: logo("prudencial.co.ao") },
   { nome: "Fortaleza Seguros", sigla: "FORT", logoUrl: logo("fortalezaseguros.co.ao") },
+  { nome: "Bonws Seguros", sigla: "BONWS", logoUrl: logo("bonws.co.ao") },
+  { nome: "Confiança Seguros", sigla: "CONF", logoUrl: logo("confianca.co.ao") },
+  { nome: "Universal Seguros", sigla: "UNIV", logoUrl: logo("universalseguros.co.ao") },
+  { nome: "GA Angola Seguros", sigla: "GA", logoUrl: logo("ga-angola.com") },
+  { nome: "Protteja Seguros", sigla: "PROT", logoUrl: logo("protteja.co.ao") },
+  { nome: "Mundial Seguros", sigla: "MUND", logoUrl: logo("mundialseguros.co.ao") },
 ];
 
 const ESPECIALIDADES = [
@@ -88,6 +94,7 @@ interface UnidadeSeed {
   horario?: string;
   logoUrl?: string;
   descricao?: string;
+  rede?: string;
   especialidades?: string[];
   seguradoras?: string[];
   medicos?: { nome: string; especialidade: string }[];
@@ -126,8 +133,9 @@ const HOSPITAIS_PUBLICOS: UnidadeSeed[] = [
 
 // Clínicas e hospitais privados reais.
 const CLINICAS_PRIVADAS: UnidadeSeed[] = [
-  { nome: "Clínica Sagrada Esperança – Ilha de Luanda", tipo: "CLINICA_PRIVADA", provincia: "Luanda", municipio: "Luanda", morada: "Ilha de Luanda", urgencia24h: true, horario: "24 horas", logoUrl: "https://logo.clearbit.com/clinicasagradaesperanca.co.ao", descricao: "A maior rede privada de saúde de Angola, presente em várias províncias.", especialidades: ["Cardiologia", "Dermatologia", "Oftalmologia", "Ginecologia-Obstetrícia", "Ortopedia"], seguradoras: ["ENSA Seguros", "Fidelidade Angola", "NOSSA Seguros", "Saham Angola"] },
-  { nome: "Clínica Sagrada Esperança – Talatona", tipo: "CLINICA_PRIVADA", provincia: "Luanda", municipio: "Belas", urgencia24h: true, horario: "24 horas", logoUrl: "https://logo.clearbit.com/clinicasagradaesperanca.co.ao", especialidades: ["Clínica Geral", "Pediatria", "Cardiologia"], seguradoras: ["ENSA Seguros", "Fidelidade Angola", "NOSSA Seguros"] },
+  { nome: "Clínica Sagrada Esperança – Ilha de Luanda", rede: "Clínica Sagrada Esperança", tipo: "CLINICA_PRIVADA", provincia: "Luanda", municipio: "Luanda", morada: "Ilha de Luanda", urgencia24h: true, horario: "24 horas", logoUrl: "https://logo.clearbit.com/clinicasagradaesperanca.co.ao", descricao: "A maior rede privada de saúde de Angola, presente em várias províncias.", especialidades: ["Cardiologia", "Dermatologia", "Oftalmologia", "Ginecologia-Obstetrícia", "Ortopedia"], seguradoras: ["ENSA Seguros", "Fidelidade Angola", "NOSSA Seguros", "Saham Angola"] },
+  { nome: "Clínica Sagrada Esperança – Talatona", rede: "Clínica Sagrada Esperança", tipo: "CLINICA_PRIVADA", provincia: "Luanda", municipio: "Belas", urgencia24h: true, horario: "24 horas", logoUrl: "https://logo.clearbit.com/clinicasagradaesperanca.co.ao", especialidades: ["Clínica Geral", "Pediatria", "Cardiologia"], seguradoras: ["ENSA Seguros", "Fidelidade Angola", "NOSSA Seguros"] },
+  { nome: "Clínica Sagrada Esperança – Benguela", rede: "Clínica Sagrada Esperança", tipo: "CLINICA_PRIVADA", provincia: "Benguela", municipio: "Benguela", horario: "Seg-Sáb, 08h-20h", logoUrl: "https://logo.clearbit.com/clinicasagradaesperanca.co.ao", especialidades: ["Clínica Geral", "Pediatria"], seguradoras: ["ENSA Seguros", "Fidelidade Angola"] },
   { nome: "Clínica Girassol", tipo: "CLINICA_PRIVADA", provincia: "Luanda", municipio: "Luanda", morada: "Rua Manuel Fernando Caldeira", urgencia24h: true, horario: "24 horas", logoUrl: "https://logo.clearbit.com/clinicagirassol.co.ao", descricao: "Hospital privado de referência em cardiologia, neurologia e ortopedia.", especialidades: ["Neurologia", "Cardiologia", "Urologia", "Medicina Interna", "Estomatologia"], seguradoras: ["ENSA Seguros", "Global Seguros", "Saham Angola"] },
   { nome: "Clínica Multiperfil", tipo: "CLINICA_PRIVADA", provincia: "Luanda", municipio: "Belas", horario: "Seg-Sáb, 07h-20h", especialidades: ["Pediatria", "Ginecologia-Obstetrícia", "Oftalmologia", "Otorrinolaringologia"], seguradoras: ["Fidelidade Angola", "NOSSA Seguros"] },
   { nome: "Clínica Endiama", tipo: "CLINICA_PRIVADA", provincia: "Luanda", municipio: "Ingombota", horario: "Seg-Sex, 07h-19h", especialidades: ["Clínica Geral", "Cardiologia", "Análises Clínicas"], seguradoras: ["ENSA Seguros", "Global Seguros"] },
@@ -137,9 +145,10 @@ const CLINICAS_PRIVADAS: UnidadeSeed[] = [
 
 // Redes de farmácias.
 const FARMACIAS: UnidadeSeed[] = [
-  { nome: "Farmácia Popular – Morro Bento", tipo: "FARMACIA", provincia: "Luanda", municipio: "Belas", morada: "Rua Pedro de Castro Van-Dúnem Loy", urgencia24h: true, horario: "08h-21h", logoUrl: "https://logo.clearbit.com/farmaciapopular.co.ao", seguradoras: ["ENSA Seguros", "Fidelidade Angola", "NOSSA Seguros"] },
-  { nome: "Farmácia Popular – Camama", tipo: "FARMACIA", provincia: "Luanda", municipio: "Kilamba Kiaxi", horario: "08h-21h", logoUrl: "https://logo.clearbit.com/farmaciapopular.co.ao", seguradoras: ["NOSSA Seguros", "Saham Angola"] },
-  { nome: "Farmácia Popular – Luanda Porto", tipo: "FARMACIA", provincia: "Luanda", municipio: "Ingombota", morada: "Rua Major Kanhangulo", horario: "08h-21h", logoUrl: "https://logo.clearbit.com/farmaciapopular.co.ao", seguradoras: ["Fidelidade Angola"] },
+  { nome: "Farmácia Popular – Morro Bento", rede: "Farmácia Popular", tipo: "FARMACIA", provincia: "Luanda", municipio: "Belas", morada: "Rua Pedro de Castro Van-Dúnem Loy", urgencia24h: true, horario: "08h-21h", logoUrl: "https://logo.clearbit.com/farmaciapopular.co.ao", seguradoras: ["ENSA Seguros", "Fidelidade Angola", "NOSSA Seguros"] },
+  { nome: "Farmácia Popular – Camama", rede: "Farmácia Popular", tipo: "FARMACIA", provincia: "Luanda", municipio: "Kilamba Kiaxi", horario: "08h-21h", logoUrl: "https://logo.clearbit.com/farmaciapopular.co.ao", seguradoras: ["NOSSA Seguros", "Saham Angola"] },
+  { nome: "Farmácia Popular – Luanda Porto", rede: "Farmácia Popular", tipo: "FARMACIA", provincia: "Luanda", municipio: "Ingombota", morada: "Rua Major Kanhangulo", horario: "08h-21h", logoUrl: "https://logo.clearbit.com/farmaciapopular.co.ao", seguradoras: ["Fidelidade Angola"] },
+  { nome: "Farmácia Popular – Lubango", rede: "Farmácia Popular", tipo: "FARMACIA", provincia: "Huíla", municipio: "Lubango", horario: "08h-21h", logoUrl: "https://logo.clearbit.com/farmaciapopular.co.ao", seguradoras: ["ENSA Seguros"] },
   { nome: "Farmácia Central de Luanda", tipo: "FARMACIA", provincia: "Luanda", municipio: "Luanda", morada: "Rua Rainha Ginga", urgencia24h: true, horario: "24 horas", seguradoras: ["ENSA Seguros", "NOSSA Seguros"] },
   { nome: "Farmácia Benguela Saúde", tipo: "FARMACIA", provincia: "Benguela", municipio: "Benguela", horario: "Seg-Sáb, 08h-20h", seguradoras: ["Global Seguros"] },
   { nome: "Farmácia do Lubango", tipo: "FARMACIA", provincia: "Huíla", municipio: "Lubango", horario: "Seg-Sáb, 08h-20h", seguradoras: ["ENSA Seguros"] },
@@ -205,7 +214,16 @@ async function main() {
   let criadas = 0;
   for (const u of UNIDADES) {
     const existe = await prisma.unidade.findFirst({ where: { nome: u.nome } });
-    if (existe) continue;
+    if (existe) {
+      // Backfill de rede/logótipo em falta (não sobrepõe edições do admin).
+      const dados: { rede?: string; logoUrl?: string } = {};
+      if (u.rede && !existe.rede) dados.rede = u.rede;
+      if (u.logoUrl && !existe.logoUrl) dados.logoUrl = u.logoUrl;
+      if (Object.keys(dados).length > 0) {
+        await prisma.unidade.update({ where: { id: existe.id }, data: dados });
+      }
+      continue;
+    }
     criadas++;
     await prisma.unidade.create({
       data: {
@@ -219,6 +237,7 @@ async function main() {
         horario: u.horario,
         logoUrl: u.logoUrl,
         descricao: u.descricao,
+        rede: u.rede,
         especialidades: {
           create: (u.especialidades ?? []).map((nome) => ({
             especialidade: { connect: { id: especialidades.get(nome)! } },
