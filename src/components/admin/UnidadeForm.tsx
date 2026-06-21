@@ -48,6 +48,24 @@ export function UnidadeForm({
     setV((s) => ({ ...s, [k]: val }));
   }
 
+  async function carregarImagem(campo: "logoUrl" | "bannerUrl", ficheiro: File) {
+    setErro(null);
+    setOcupado(true);
+    try {
+      const fd = new FormData();
+      fd.append("ficheiro", ficheiro);
+      const res = await fetch("/api/admin/ficheiros", { method: "POST", body: fd });
+      const data = await res.json();
+      if (!res.ok) {
+        setErro(data.erro ?? "Não foi possível carregar a imagem.");
+        return;
+      }
+      set(campo, data.url);
+    } finally {
+      setOcupado(false);
+    }
+  }
+
   async function guardar(e: React.FormEvent) {
     e.preventDefault();
     setErro(null);
@@ -118,14 +136,22 @@ export function UnidadeForm({
         <input className="input" value={v.morada} onChange={(e) => set("morada", e.target.value)} />
       </div>
 
-      <div>
-        <label className="label">Logótipo (URL da imagem)</label>
-        <input className="input" value={v.logoUrl} onChange={(e) => set("logoUrl", e.target.value)} placeholder="https://…" />
-      </div>
-      <div>
-        <label className="label">Banner (URL da imagem)</label>
-        <input className="input" value={v.bannerUrl} onChange={(e) => set("bannerUrl", e.target.value)} placeholder="https://…" />
-      </div>
+      <CampoImagem
+        rotulo="Logótipo / foto"
+        valor={v.logoUrl}
+        previewClasse="h-20 w-20 rounded-xl"
+        ocupado={ocupado}
+        onUrl={(url) => set("logoUrl", url)}
+        onFicheiro={(f) => carregarImagem("logoUrl", f)}
+      />
+      <CampoImagem
+        rotulo="Banner"
+        valor={v.bannerUrl}
+        previewClasse="h-24 w-full rounded-xl"
+        ocupado={ocupado}
+        onUrl={(url) => set("bannerUrl", url)}
+        onFicheiro={(f) => carregarImagem("bannerUrl", f)}
+      />
 
       <div>
         <label className="label">Descrição</label>
@@ -149,5 +175,65 @@ export function UnidadeForm({
         {ocupado ? "A guardar…" : id ? "Guardar alterações" : "Criar unidade"}
       </button>
     </form>
+  );
+}
+
+function CampoImagem({
+  rotulo,
+  valor,
+  previewClasse,
+  ocupado,
+  onUrl,
+  onFicheiro,
+}: {
+  rotulo: string;
+  valor: string;
+  previewClasse: string;
+  ocupado: boolean;
+  onUrl: (url: string) => void;
+  onFicheiro: (f: File) => void;
+}) {
+  return (
+    <div>
+      <label className="label">{rotulo}</label>
+      <div className="flex items-center gap-4">
+        {valor ? (
+          /* eslint-disable-next-line @next/next/no-img-element */
+          <img
+            src={valor}
+            alt=""
+            className={`${previewClasse} max-w-[160px] border border-base-line object-cover`}
+          />
+        ) : (
+          <div className={`${previewClasse} max-w-[160px] bg-base-muted`} />
+        )}
+        <div className="flex flex-col gap-2">
+          <label className="btn-ghost inline-flex cursor-pointer py-2">
+            {valor ? "Mudar imagem" : "Carregar imagem"}
+            <input
+              type="file"
+              accept="image/jpeg,image/png,image/webp,image/svg+xml"
+              className="hidden"
+              disabled={ocupado}
+              onChange={(e) => {
+                const f = e.target.files?.[0];
+                if (f) onFicheiro(f);
+              }}
+            />
+          </label>
+          {valor && (
+            <button type="button" onClick={() => onUrl("")} className="text-xs text-angola-red">
+              Remover
+            </button>
+          )}
+        </div>
+      </div>
+      <input
+        className="input mt-2"
+        value={valor}
+        onChange={(e) => onUrl(e.target.value)}
+        placeholder="ou cole um URL (https://…)"
+      />
+    </div>
   );
 }

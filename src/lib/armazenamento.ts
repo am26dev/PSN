@@ -24,6 +24,9 @@ import {
 
 const DRIVER = process.env.STORAGE_DRIVER ?? "local";
 const DIR_LOCAL = process.env.STORAGE_DIR ?? join(process.cwd(), ".uploads");
+// Ficheiros PÚBLICOS (ex.: logótipos/banners de unidades) — não cifrados,
+// guardados à parte dos ficheiros sensíveis para nunca haver acesso cruzado.
+const DIR_PUBLICO = join(DIR_LOCAL, "publico");
 
 function chave(): Buffer {
   const segredo =
@@ -106,4 +109,39 @@ export async function lerFicheiro(key: string): Promise<FicheiroGuardado> {
     buffer: Buffer.from(payload.dados, "base64"),
     contentType: payload.contentType,
   };
+}
+
+// ── Ficheiros públicos (imagens de unidades) ─────────────────────────────────
+
+/** Guarda um ficheiro PÚBLICO (não cifrado) e devolve a sua chave. */
+export async function guardarFicheiroPublico(
+  conteudo: Buffer,
+  contentType: string,
+): Promise<string> {
+  if (DRIVER === "s3") {
+    throw new Error("STORAGE_DRIVER=s3 ainda não implementado.");
+  }
+  const key = randomUUID();
+  await mkdir(DIR_PUBLICO, { recursive: true });
+  await writeFile(join(DIR_PUBLICO, key), conteudo);
+  await writeFile(join(DIR_PUBLICO, `${key}.type`), contentType, "utf8");
+  return key;
+}
+
+/** Lê um ficheiro público previamente guardado. */
+export async function lerFicheiroPublico(key: string): Promise<FicheiroGuardado> {
+  if (!/^[a-f0-9-]{36}$/.test(key)) {
+    throw new Error("Chave de ficheiro inválida.");
+  }
+  if (DRIVER === "s3") {
+    throw new Error("STORAGE_DRIVER=s3 ainda não implementado.");
+  }
+  const buffer = await readFile(join(DIR_PUBLICO, key));
+  let contentType = "application/octet-stream";
+  try {
+    contentType = (await readFile(join(DIR_PUBLICO, `${key}.type`), "utf8")).trim();
+  } catch {
+    /* sem sidecar — usa o tipo genérico */
+  }
+  return { buffer, contentType };
 }
