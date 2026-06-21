@@ -2,9 +2,11 @@ import { z } from "zod";
 import { validarBI, validarPassaporte, normalizarDocumento } from "@/lib/documento";
 
 const PROVINCIAS = [
-  "Bengo", "Benguela", "Bié", "Cabinda", "Cuando Cubango", "Cuanza Norte",
-  "Cuanza Sul", "Cunene", "Huambo", "Huíla", "Luanda", "Lunda Norte",
-  "Lunda Sul", "Malanje", "Moxico", "Namibe", "Uíge", "Zaire",
+  "Bengo", "Benguela", "Bié", "Cabinda", "Cubango", "Cuando",
+  "Cuando Cubango", "Cuanza Norte", "Cuanza Sul", "Cunene", "Huambo",
+  "Huíla", "Icolo e Bengo", "Luanda", "Lunda Norte", "Lunda Sul",
+  "Malanje", "Moxico", "Moxico Leste", "Namibe", "Uíge", "Zaire",
+  "Não identificado",
 ] as const;
 
 export const PROVINCIAS_ANGOLA = PROVINCIAS;
@@ -95,7 +97,18 @@ export const revisaoVerificacaoSchema = z.object({
 
 export const unidadeSchema = z.object({
   nome: z.string().min(2, "Indique o nome da unidade."),
-  tipo: z.enum(["HOSPITAL_PUBLICO", "CLINICA_PRIVADA", "FARMACIA"]),
+  tipo: z.enum([
+    "HOSPITAL_PUBLICO",
+    "UNIDADE_HOSPITALAR",
+    "CLINICA_PRIVADA",
+    "CENTRO_MEDICO",
+    "CLINICA_DENTARIA",
+    "LABORATORIO",
+    "FISIOTERAPIA",
+    "OPTICA",
+    "PRESTADOR_SAUDE",
+    "FARMACIA",
+  ]),
   provincia: z.string().min(2, "Indique a província."),
   municipio: z.string().min(2, "Indique o município."),
   morada: z.string().optional(),

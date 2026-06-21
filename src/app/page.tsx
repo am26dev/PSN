@@ -5,14 +5,16 @@ import { SLIDES_HERO } from "@/lib/imagens";
 import { LogoSeguradora } from "@/components/LogoSeguradora";
 
 export default async function HomePage() {
-  const [hospitais, clinicas, farmacias] = await Promise.all([
+  const [hospitais, prestadores, farmacias] = await Promise.all([
     prisma.unidade.count({ where: { tipo: "HOSPITAL_PUBLICO", ativo: true } }),
-    prisma.unidade.count({ where: { tipo: "CLINICA_PRIVADA", ativo: true } }),
+    prisma.unidade.count({
+      where: { tipo: { notIn: ["HOSPITAL_PUBLICO", "FARMACIA"] }, ativo: true },
+    }),
     prisma.unidade.count({ where: { tipo: "FARMACIA", ativo: true } }),
   ]).catch(() => [0, 0, 0]);
 
   const seguradoras = await prisma.seguradora
-    .findMany({ orderBy: { nome: "asc" } })
+    .findMany({ where: { ativo: true }, orderBy: { nome: "asc" } })
     .catch(() => []);
 
   return (
@@ -23,7 +25,7 @@ export default async function HomePage() {
       {/* Estatísticas da rede */}
       <section className="grid grid-cols-3 gap-4">
         <Estatistica numero={hospitais} rotulo="Hospitais públicos" />
-        <Estatistica numero={clinicas} rotulo="Clínicas privadas" />
+        <Estatistica numero={prestadores} rotulo="Clínicas e prestadores" />
         <Estatistica numero={farmacias} rotulo="Farmácias" />
       </section>
 
@@ -31,7 +33,7 @@ export default async function HomePage() {
       {seguradoras.length > 0 && (
         <section>
           <h2 className="text-center text-sm font-semibold uppercase tracking-wide text-gray-400">
-            Seguradoras parceiras
+            Seguradoras e redes de saúde
           </h2>
           <div className="mt-4 flex flex-wrap items-center justify-center gap-3">
             {seguradoras.map((s) => (

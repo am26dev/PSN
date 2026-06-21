@@ -15,7 +15,14 @@ function picsum(seed: string, w: number, h: number): string {
 
 const SEED_TIPO: Record<TipoUnidade, string> = {
   HOSPITAL_PUBLICO: "hospital",
+  UNIDADE_HOSPITALAR: "hospital",
   CLINICA_PRIVADA: "clinica",
+  CENTRO_MEDICO: "centro-medico",
+  CLINICA_DENTARIA: "clinica-dentaria",
+  LABORATORIO: "laboratorio",
+  FISIOTERAPIA: "fisioterapia",
+  OPTICA: "optica",
+  PRESTADOR_SAUDE: "saude",
   FARMACIA: "farmacia",
 };
 

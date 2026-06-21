@@ -101,7 +101,14 @@ export function UnidadeForm({
           <label className="label">Tipo</label>
           <select className="input" value={v.tipo} onChange={(e) => set("tipo", e.target.value)}>
             <option value="HOSPITAL_PUBLICO">Hospital público</option>
+            <option value="UNIDADE_HOSPITALAR">Hospital / unidade hospitalar</option>
             <option value="CLINICA_PRIVADA">Clínica privada</option>
+            <option value="CENTRO_MEDICO">Centro médico</option>
+            <option value="CLINICA_DENTARIA">Clínica dentária</option>
+            <option value="LABORATORIO">Diagnóstico / laboratório</option>
+            <option value="FISIOTERAPIA">Fisioterapia / reabilitação</option>
+            <option value="OPTICA">Óptica</option>
+            <option value="PRESTADOR_SAUDE">Prestador de saúde</option>
             <option value="FARMACIA">Farmácia</option>
           </select>
         </div>

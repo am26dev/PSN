@@ -9,29 +9,41 @@ import { useState } from "react";
 export function LogoSeguradora({
   nome,
   logoUrl,
+  compacto = false,
 }: {
   nome: string;
   logoUrl?: string | null;
+  compacto?: boolean;
 }) {
   const [falhou, setFalhou] = useState(false);
 
   if (logoUrl && !falhou) {
     return (
-      <span className="inline-flex h-10 items-center gap-2 rounded-xl border border-base-line bg-white px-3 shadow-sm">
+      <span
+        title={nome}
+        className={`inline-flex items-center rounded-xl border border-base-line bg-white shadow-sm ${
+          compacto ? "h-8 px-2" : "h-10 gap-2 px-3"
+        }`}
+      >
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src={logoUrl}
           alt={nome}
-          className="h-6 w-auto max-w-[90px] object-contain"
+          className={`${compacto ? "h-5 max-w-[62px]" : "h-6 max-w-[90px]"} w-auto object-contain`}
           loading="lazy"
           onError={() => setFalhou(true)}
         />
-        <span className="text-xs font-medium text-gray-700">{nome}</span>
+        {!compacto && <span className="text-xs font-medium text-gray-700">{nome}</span>}
       </span>
     );
   }
 
   return (
-    <span className="badge bg-angola-gold/20 text-angola-gold-dark">{nome}</span>
+    <span
+      title={nome}
+      className={`badge bg-angola-gold/20 text-angola-gold-dark ${compacto ? "max-w-[90px] truncate" : ""}`}
+    >
+      {nome}
+    </span>
   );
 }

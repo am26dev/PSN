@@ -2,10 +2,18 @@ import Link from "next/link";
 import type { TipoUnidade } from "@prisma/client";
 import { ETIQUETA_TIPO_UNIDADE } from "@/lib/etiquetas";
 import { fotoUnidade } from "@/lib/imagens";
+import { LogoSeguradora } from "@/components/LogoSeguradora";
 
 const COR_TIPO: Record<TipoUnidade, string> = {
   HOSPITAL_PUBLICO: "bg-angola-red/10 text-angola-red-dark",
+  UNIDADE_HOSPITALAR: "bg-angola-red/10 text-angola-red-dark",
   CLINICA_PRIVADA: "bg-angola-gold/20 text-angola-gold-dark",
+  CENTRO_MEDICO: "bg-angola-gold/20 text-angola-gold-dark",
+  CLINICA_DENTARIA: "bg-angola-gold/20 text-angola-gold-dark",
+  LABORATORIO: "bg-blue-100 text-blue-700",
+  FISIOTERAPIA: "bg-emerald-100 text-emerald-700",
+  OPTICA: "bg-sky-100 text-sky-700",
+  PRESTADOR_SAUDE: "bg-base-muted text-gray-700",
   FARMACIA: "bg-base-muted text-gray-700",
 };
 
@@ -21,6 +29,10 @@ export function UnidadeCard({
     urgencia24h: boolean;
     logoUrl?: string | null;
     especialidades: { especialidade: { nome: string } }[];
+    seguradoras: {
+      seguradoraId: string;
+      seguradora: { nome: string; logoUrl: string | null };
+    }[];
   };
 }) {
   return (
@@ -54,6 +66,22 @@ export function UnidadeCard({
           <p className="mt-3 line-clamp-1 text-xs text-gray-500">
             {unidade.especialidades.map((e) => e.especialidade.nome).join(" · ")}
           </p>
+        )}
+        {unidade.seguradoras.length > 0 && (
+          <div className="mt-4 flex flex-wrap items-center gap-1.5 border-t border-base-line pt-3">
+            <span className="mr-1 text-[11px] font-medium text-gray-400">Cobertura:</span>
+            {unidade.seguradoras.slice(0, 4).map((s) => (
+              <LogoSeguradora
+                key={s.seguradoraId}
+                nome={s.seguradora.nome}
+                logoUrl={s.seguradora.logoUrl}
+                compacto
+              />
+            ))}
+            {unidade.seguradoras.length > 4 && (
+              <span className="text-xs text-gray-400">+{unidade.seguradoras.length - 4}</span>
+            )}
+          </div>
         )}
       </div>
     </Link>

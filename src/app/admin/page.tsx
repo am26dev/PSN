@@ -17,7 +17,7 @@ export default async function AdminDashboard() {
     totalUtentes,
     verificados,
     hospitais,
-    clinicas,
+    prestadores,
     farmacias,
     totalMarcacoes,
     marcacoesPendentes,
@@ -29,7 +29,9 @@ export default async function AdminDashboard() {
     prisma.utente.count(),
     prisma.utente.count({ where: { verificado: true } }),
     prisma.unidade.count({ where: { tipo: "HOSPITAL_PUBLICO", ativo: true } }),
-    prisma.unidade.count({ where: { tipo: "CLINICA_PRIVADA", ativo: true } }),
+    prisma.unidade.count({
+      where: { tipo: { notIn: ["HOSPITAL_PUBLICO", "FARMACIA"] }, ativo: true },
+    }),
     prisma.unidade.count({ where: { tipo: "FARMACIA", ativo: true } }),
     prisma.marcacao.count(),
     prisma.marcacao.count({ where: { estado: "PENDENTE" } }),
@@ -90,7 +92,7 @@ export default async function AdminDashboard() {
       {/* Rede */}
       <section className="grid gap-4 sm:grid-cols-3">
         <Indicador titulo="Hospitais públicos" valor={hospitais} />
-        <Indicador titulo="Clínicas privadas" valor={clinicas} />
+        <Indicador titulo="Clínicas e prestadores" valor={prestadores} />
         <Indicador titulo="Farmácias" valor={farmacias} />
       </section>
 
@@ -156,7 +158,7 @@ export default async function AdminDashboard() {
 
       {/* Atalhos de gestão (CMS) */}
       <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <Atalho href="/admin/unidades" titulo="Gerir unidades" texto="Adicionar e editar hospitais, clínicas e farmácias." />
+        <Atalho href="/admin/unidades" titulo="Gerir unidades" texto="Adicionar e editar hospitais, clínicas, centros, farmácias e outros prestadores." />
         <Atalho href="/admin/utentes" titulo="Gerir utilizadores" texto="Definir níveis de acesso (utente, profissional, admin)." />
         <Atalho href="/admin/verificacoes" titulo="Verificações" texto="Aprovar ou rejeitar documentos dos utentes." />
         <Atalho href="/directorio" titulo="Rede de saúde" texto="Ver o portal como os utentes o veem." />

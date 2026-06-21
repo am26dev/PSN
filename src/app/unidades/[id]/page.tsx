@@ -18,13 +18,21 @@ export default async function UnidadePage({
     include: {
       especialidades: { include: { especialidade: true } },
       medicos: { include: { especialidade: true }, orderBy: { nome: "asc" } },
-      seguradoras: { include: { seguradora: true } },
+      seguradoras: {
+        where: { seguradora: { ativo: true } },
+        include: { seguradora: true },
+      },
     },
   });
 
   if (!unidade || !unidade.ativo) notFound();
 
   const eFarmacia = unidade.tipo === "FARMACIA";
+  const eHospitalPublico = unidade.tipo === "HOSPITAL_PUBLICO";
+  const fontes = (unidade.fonteUrl ?? "")
+    .split("|")
+    .map((fonte) => fonte.trim())
+    .filter((fonte) => fonte.startsWith("http://") || fonte.startsWith("https://"));
 
   // Marcação ativa do utente nesta unidade (para oferecer "Remarcar").
   const utente = await utenteAtual();
@@ -93,8 +101,9 @@ export default async function UnidadePage({
           </div>
         </div>
 
-        <div className="grid gap-4 p-6 sm:grid-cols-3">
+        <div className="grid gap-4 p-6 sm:grid-cols-2 lg:grid-cols-4">
           <Info rotulo="Telefone" valor={unidade.telefone ?? "—"} />
+          <Info rotulo="E-mail" valor={unidade.email ?? "—"} />
           <Info rotulo="Horário" valor={unidade.horario ?? "—"} />
           <Info rotulo="Morada" valor={unidade.morada ?? "—"} />
         </div>
@@ -121,6 +130,15 @@ export default async function UnidadePage({
           </div>
         )}
       </div>
+
+      {unidade.servicos && (
+        <section className="card p-6">
+          <h2 className="text-xl font-bold">Serviços e valências</h2>
+          <p className="mt-3 whitespace-pre-line text-sm leading-6 text-gray-600">
+            {unidade.servicos}
+          </p>
+        </section>
+      )}
 
       {/* Rede — outras unidades da mesma marca */}
       {unidade.rede && unidadesRede.length > 0 && (
@@ -193,9 +211,16 @@ export default async function UnidadePage({
       )}
 
       {/* Cobertura de seguros */}
-      <section>
-        <h2 className="text-xl font-bold">Seguros de saúde aceites</h2>
-        {unidade.seguradoras.length > 0 ? (
+      <section className="card p-6">
+        <h2 className="text-xl font-bold">Cobertura e atendimento</h2>
+        {eHospitalPublico ? (
+          <div className="mt-3">
+            <span className="badge bg-green-100 text-green-700">SNS / Atendimento público</span>
+            <p className="mt-3 text-sm text-gray-500">
+              A cobertura por seguro privado deve ser confirmada diretamente com a unidade.
+            </p>
+          </div>
+        ) : unidade.seguradoras.length > 0 ? (
           <div className="mt-3 flex flex-wrap items-center gap-2">
             {unidade.seguradoras.map((s) => (
               <LogoSeguradora
@@ -207,13 +232,51 @@ export default async function UnidadePage({
           </div>
         ) : (
           <p className="mt-2 text-sm text-gray-500">
-            Esta unidade atende sem seguro (pagamento direto).
+            Não foi indicada uma rede de seguros para esta unidade. Confirme a
+            cobertura diretamente antes do atendimento.
           </p>
         )}
-        <p className="mt-3 text-sm text-gray-500">
-          Atende também utentes <strong>sem seguro</strong>, com pagamento em Kwanzas.
-        </p>
+        {!eHospitalPublico && (
+          <p className="mt-3 text-sm text-gray-500">
+            A aceitação e as condições da apólice devem ser confirmadas com a unidade e a seguradora.
+          </p>
+        )}
       </section>
+
+      {(unidade.validacao || fontes.length > 0 || unidade.observacoes) && (
+        <section className="card p-6">
+          <h2 className="text-xl font-bold">Fonte e validação dos dados</h2>
+          {unidade.validacao && (
+            <p className="mt-3">
+              <span className={`badge ${corValidacao(unidade.validacao)}`}>
+                {unidade.validacao}
+              </span>
+            </p>
+          )}
+          {fontes.length > 0 && (
+            <ul className="mt-4 space-y-2 text-sm">
+              {fontes.map((fonte, indice) => (
+                <li key={fonte}>
+                  <a
+                    href={fonte}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="break-all font-medium text-angola-red hover:underline"
+                  >
+                    Fonte pública {fontes.length > 1 ? indice + 1 : ""}
+                  </a>
+                </li>
+              ))}
+            </ul>
+          )}
+          {unidade.observacoes && (
+            <p className="mt-4 text-sm text-gray-500">{unidade.observacoes}</p>
+          )}
+          <p className="mt-4 text-xs text-gray-400">
+            Contactos, serviços e coberturas podem mudar. Confirme a informação diretamente com a entidade.
+          </p>
+        </section>
+      )}
     </div>
   );
 }
@@ -225,4 +288,15 @@ function Info({ rotulo, valor }: { rotulo: string; valor: string }) {
       <p className="mt-1 font-medium">{valor}</p>
     </div>
   );
+}
+
+function corValidacao(validacao: string) {
+  const texto = validacao.toLowerCase();
+  if (texto.includes("alto") || texto.includes("validado")) {
+    return "bg-green-100 text-green-700";
+  }
+  if (texto.includes("parcial") || texto.includes("baixo")) {
+    return "bg-angola-gold/20 text-angola-gold-dark";
+  }
+  return "bg-base-muted text-gray-600";
 }

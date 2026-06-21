@@ -23,8 +23,12 @@ automaticamente como administrador**. Detalhes em [DEPLOY.md](./DEPLOY.md).
 - **Contas de Utente** com Bilhete de Identidade (cidadãos angolanos) ou Passaporte (estrangeiros),
   com validação de formato do BI e pré-preenchimento da província de emissão.
 - **Agregado familiar** — o responsável adiciona filhos, cônjuge ou pais.
-- **Diretório nacional** de unidades, com pesquisa por nome, tipo e província.
+- **Diretório nacional** com 787 unidades/prestadores compilados (143 hospitais
+  públicos/SNS e 644 prestadores privados), pesquisa por nome, tipo, província,
+  serviços e seguradora/rede, com paginação.
 - **Página da unidade** com especialidades, médicos disponíveis e **seguros aceites** (e atendimento sem seguro).
+- **Fontes e validação visíveis** em cada unidade, para distinguir dados oficiais,
+  diretórios públicos e registos que ainda devem ser confirmados localmente.
 - **Marcação de consultas** com escolha de especialidade/médico e **método de pagamento**.
 - **Ficha de saúde** pessoal (tipo sanguíneo, alergias, doenças crónicas, medicação).
 - **Verificação de identidade (KYC)** — ver secção própria.
@@ -93,6 +97,10 @@ Cores da **Bandeira de Angola** segundo a regra 60/30/10:
 **60%** base neutra (branco + preto da bandeira para texto, garantindo legibilidade),
 **30%** vermelho de Angola (cabeçalhos e superfícies de marca),
 **10%** dourado do emblema (botões de ação e destaques).
+
+Os logótipos das seguradoras são servidos pelo próprio portal em
+`public/seguradoras/`; as relações entre prestadores e coberturas foram
+carregadas a partir do levantamento consolidado de saúde e seguros de Angola.
 
 ## Stack técnica
 

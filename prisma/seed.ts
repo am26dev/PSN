@@ -1,9 +1,29 @@
-import { PrismaClient, type TipoUnidade, type Papel } from "@prisma/client";
+import { PrismaClient, type Papel, type TipoUnidade } from "@prisma/client";
 import argon2 from "argon2";
+import unidadesJson from "./data/unidades-saude-angola.json";
 
 const prisma = new PrismaClient();
 
-// Contas de teste criadas automaticamente no arranque (para login imediato).
+interface UnidadeFonte {
+  fonteExternaId: string;
+  nome: string;
+  tipo: TipoUnidade;
+  tipoOriginal: string;
+  provincia: string;
+  municipio: string;
+  morada: string;
+  telefone: string;
+  email: string;
+  servicos: string;
+  seguradoras: string[];
+  especialidades: string[];
+  fonteUrl: string;
+  validacao: string;
+  observacoes: string;
+}
+
+const UNIDADES = unidadesJson as unknown as UnidadeFonte[];
+
 const UTENTES_TESTE: {
   numeroDocumento: string;
   nomeCompleto: string;
@@ -52,221 +72,248 @@ const UTENTES_TESTE: {
   },
 ];
 
-// Seguradoras reais com presença em Angola (fonte: ARSEG / pesquisa de mercado).
-// O logótipo é obtido por domínio (Clearbit) com reserva elegante no portal.
-function logo(dominio: string) {
-  return `https://logo.clearbit.com/${dominio}`;
-}
+// Logótipos fornecidos para o portal. Os ficheiros são servidos localmente,
+// evitando dependências de serviços externos de logótipos.
 const SEGURADORAS = [
-  { nome: "ENSA Seguros", sigla: "ENSA", logoUrl: logo("ensa.co.ao") },
-  { nome: "Fidelidade Angola", sigla: "FID", logoUrl: logo("fidelidade.co.ao") },
-  { nome: "NOSSA Seguros", sigla: "NOSSA", logoUrl: logo("nossaseguros.ao") },
-  { nome: "Global Seguros", sigla: "GLB", logoUrl: logo("globalseguros.co.ao") },
-  { nome: "Saham Angola", sigla: "SAHAM", logoUrl: logo("saham.co.ao") },
-  { nome: "BIC Seguros", sigla: "BIC", logoUrl: logo("bicseguros.ao") },
-  { nome: "Tranquilidade Angola", sigla: "TRANQ", logoUrl: logo("tranquilidade.co.ao") },
-  { nome: "AAA Seguros", sigla: "AAA", logoUrl: logo("aaaseguros.co.ao") },
-  { nome: "Prudencial Seguros", sigla: "PRUD", logoUrl: logo("prudencial.co.ao") },
-  { nome: "Fortaleza Seguros", sigla: "FORT", logoUrl: logo("fortalezaseguros.co.ao") },
-  { nome: "Bonws Seguros", sigla: "BONWS", logoUrl: logo("bonws.co.ao") },
-  { nome: "Confiança Seguros", sigla: "CONF", logoUrl: logo("confianca.co.ao") },
-  { nome: "Universal Seguros", sigla: "UNIV", logoUrl: logo("universalseguros.co.ao") },
-  { nome: "GA Angola Seguros", sigla: "GA", logoUrl: logo("ga-angola.com") },
-  { nome: "Protteja Seguros", sigla: "PROT", logoUrl: logo("protteja.co.ao") },
-  { nome: "Mundial Seguros", sigla: "MUND", logoUrl: logo("mundialseguros.co.ao") },
+  { nome: "Aliança Seguros", sigla: "ALIANÇA", logoUrl: "/seguradoras/alianca.png" },
+  { nome: "BIC Seguros", sigla: "BIC", logoUrl: "/seguradoras/bic.png" },
+  { nome: "Confiança Seguros", sigla: "CONFIANÇA", logoUrl: "/seguradoras/confianca.png" },
+  { nome: "ENSA Seguros", sigla: "ENSA", logoUrl: "/seguradoras/ensa.png" },
+  { nome: "Fidelidade Angola", sigla: "FIDELIDADE", logoUrl: "/seguradoras/fidelidade.png" },
+  { nome: "Fortaleza Seguros", sigla: "FORTALEZA", logoUrl: "/seguradoras/fortaleza.png" },
+  { nome: "Giant Seguros", sigla: "GIANT", logoUrl: "/seguradoras/giant.png" },
+  { nome: "Mundial Seguros", sigla: "MUNDIAL", logoUrl: "/seguradoras/mundial.png" },
+  { nome: "NOSSA Seguros", sigla: "NOSSA", logoUrl: "/seguradoras/nossa.png" },
+  { nome: "Prefira Seguros", sigla: "PREFIRA", logoUrl: "/seguradoras/prefira.jpg" },
+  { nome: "Protteja Seguros", sigla: "PROTTEJA", logoUrl: "/seguradoras/proteja.jpg" },
+  { nome: "Prudencial Seguros", sigla: "PRUDENCIAL", logoUrl: "/seguradoras/prudencial.png" },
+  { nome: "Sanlam Seguros", sigla: "SANLAM", logoUrl: "/seguradoras/sanlam.png" },
+  { nome: "SOL Seguros", sigla: "SOL", logoUrl: "/seguradoras/sol.png" },
+  { nome: "STA Seguros", sigla: "STA", logoUrl: "/seguradoras/sta.png" },
+  { nome: "Super Seguros", sigla: "SUPER", logoUrl: "/seguradoras/super.png" },
+  { nome: "Tranquilidade Angola", sigla: "TRANQUILIDADE", logoUrl: "/seguradoras/tranquilidade.png" },
+  { nome: "Trevo Seguros", sigla: "TREVO", logoUrl: "/seguradoras/trevo.png" },
+  { nome: "UniSaúde", sigla: "UNISAÚDE", logoUrl: "/seguradoras/unisaude.png" },
+  { nome: "VIVA Seguros", sigla: "VIVA", logoUrl: "/seguradoras/viva.png" },
+  { nome: "VS Seguros", sigla: "VS", logoUrl: "/seguradoras/vs.jpg" },
+  // Rede/gestora de prestadores indicada no levantamento, sem imagem no ZIP.
+  { nome: "Saúde+", sigla: "SAÚDE+", logoUrl: null },
 ];
 
-const ESPECIALIDADES = [
-  "Clínica Geral", "Pediatria", "Ginecologia-Obstetrícia", "Cardiologia",
-  "Ortopedia", "Oftalmologia", "Otorrinolaringologia", "Dermatologia",
-  "Medicina Interna", "Cirurgia Geral", "Estomatologia", "Psiquiatria",
-  "Neurologia", "Urologia", "Análises Clínicas",
+const ESPECIALIDADES_BASE = [
+  "Clínica Geral",
+  "Pediatria",
+  "Ginecologia-Obstetrícia",
+  "Cardiologia",
+  "Ortopedia",
+  "Oftalmologia",
+  "Otorrinolaringologia",
+  "Dermatologia",
+  "Medicina Interna",
+  "Cirurgia Geral",
+  "Estomatologia",
+  "Psiquiatria",
+  "Neurologia",
+  "Urologia",
+  "Análises Clínicas",
+  "Nefrologia",
+  "Pneumologia",
+  "Gastroenterologia",
+  "Fisioterapia e Reabilitação",
+  "Endocrinologia",
+  "Reumatologia",
+  "Infecciologia",
+  "Hematologia",
+  "Imagiologia",
 ];
 
-interface UnidadeSeed {
-  nome: string;
-  tipo: TipoUnidade;
-  provincia: string;
-  municipio: string;
-  morada?: string;
-  telefone?: string;
-  urgencia24h?: boolean;
-  horario?: string;
-  logoUrl?: string;
-  descricao?: string;
-  rede?: string;
-  especialidades?: string[];
-  seguradoras?: string[];
-  medicos?: { nome: string; especialidade: string }[];
+function nulo(valor: string) {
+  return valor || null;
 }
 
-const ESP_BASE = ["Clínica Geral", "Medicina Interna", "Pediatria", "Cirurgia Geral"];
+function normalizar(valor: string) {
+  return valor
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, " ")
+    .trim();
+}
 
-// Hospitais públicos provinciais reais (um a vários por província).
-const HOSPITAIS_PUBLICOS: UnidadeSeed[] = [
-  { nome: "Hospital Geral de Luanda", tipo: "HOSPITAL_PUBLICO", provincia: "Luanda", municipio: "Luanda", morada: "Rua Comandante Gika", urgencia24h: true, horario: "24 horas", especialidades: ["Clínica Geral", "Medicina Interna", "Cirurgia Geral", "Cardiologia", "Ortopedia"] },
-  { nome: "Hospital Geral Américo Boavida", tipo: "HOSPITAL_PUBLICO", provincia: "Luanda", municipio: "Maianga", urgencia24h: true, horario: "24 horas", especialidades: ["Clínica Geral", "Cardiologia", "Neurologia", "Cirurgia Geral"] },
-  { nome: "Hospital Josina Machel (Maria Pia)", tipo: "HOSPITAL_PUBLICO", provincia: "Luanda", municipio: "Ingombota", urgencia24h: true, horario: "24 horas", especialidades: ["Clínica Geral", "Ortopedia", "Cirurgia Geral", "Medicina Interna"] },
-  { nome: "Hospital Pediátrico David Bernardino", tipo: "HOSPITAL_PUBLICO", provincia: "Luanda", municipio: "Luanda", urgencia24h: true, horario: "24 horas", especialidades: ["Pediatria", "Clínica Geral"] },
-  { nome: "Hospital Geral dos Cajueiros", tipo: "HOSPITAL_PUBLICO", provincia: "Luanda", municipio: "Cazenga", urgencia24h: true, horario: "24 horas", logoUrl: "https://logo.clearbit.com/hgc.gov.ao", especialidades: ["Clínica Geral", "Pediatria", "Ginecologia-Obstetrícia"] },
-  { nome: "Hospital Materno-Infantil Lucrécia Paím", tipo: "HOSPITAL_PUBLICO", provincia: "Luanda", municipio: "Ingombota", urgencia24h: true, horario: "24 horas", especialidades: ["Ginecologia-Obstetrícia", "Pediatria"] },
-  { nome: "Hospital Geral do Kilamba", tipo: "HOSPITAL_PUBLICO", provincia: "Luanda", municipio: "Belas", urgencia24h: true, horario: "24 horas", especialidades: ESP_BASE },
-  { nome: "Hospital Central de Benguela", tipo: "HOSPITAL_PUBLICO", provincia: "Benguela", municipio: "Catumbela", urgencia24h: true, horario: "24 horas", especialidades: ["Clínica Geral", "Medicina Interna", "Pediatria", "Cirurgia Geral"] },
-  { nome: "Hospital Geral do Lobito", tipo: "HOSPITAL_PUBLICO", provincia: "Benguela", municipio: "Lobito", urgencia24h: true, horario: "24 horas", especialidades: ESP_BASE },
-  { nome: "Hospital Central do Huambo", tipo: "HOSPITAL_PUBLICO", provincia: "Huambo", municipio: "Huambo", urgencia24h: true, horario: "24 horas", especialidades: ["Clínica Geral", "Cirurgia Geral", "Ortopedia", "Pediatria"] },
-  { nome: "Hospital Central da Huíla – Dr. António Agostinho Neto", tipo: "HOSPITAL_PUBLICO", provincia: "Huíla", municipio: "Lubango", urgencia24h: true, horario: "24 horas", especialidades: ["Clínica Geral", "Medicina Interna", "Cirurgia Geral"] },
-  { nome: "Hospital Central de Cabinda", tipo: "HOSPITAL_PUBLICO", provincia: "Cabinda", municipio: "Cabinda", urgencia24h: true, horario: "24 horas", especialidades: ESP_BASE },
-  { nome: "Hospital Geral do Bié (Kuito)", tipo: "HOSPITAL_PUBLICO", provincia: "Bié", municipio: "Kuito", urgencia24h: true, horario: "24 horas", especialidades: ESP_BASE },
-  { nome: "Hospital Geral de Ondjiva", tipo: "HOSPITAL_PUBLICO", provincia: "Cunene", municipio: "Ondjiva", urgencia24h: true, horario: "24 horas", especialidades: ESP_BASE },
-  { nome: "Hospital Provincial de Menongue", tipo: "HOSPITAL_PUBLICO", provincia: "Cuando Cubango", municipio: "Menongue", urgencia24h: true, horario: "24 horas", especialidades: ESP_BASE },
-  { nome: "Hospital Geral do Sumbe", tipo: "HOSPITAL_PUBLICO", provincia: "Cuanza Sul", municipio: "Sumbe", urgencia24h: true, horario: "24 horas", especialidades: ESP_BASE },
-  { nome: "Hospital Geral de N'dalatando", tipo: "HOSPITAL_PUBLICO", provincia: "Cuanza Norte", municipio: "Cazengo", urgencia24h: true, horario: "24 horas", especialidades: ESP_BASE },
-  { nome: "Hospital Geral de Malanje", tipo: "HOSPITAL_PUBLICO", provincia: "Malanje", municipio: "Malanje", urgencia24h: true, horario: "24 horas", especialidades: ESP_BASE },
-  { nome: "Hospital Geral do Luena", tipo: "HOSPITAL_PUBLICO", provincia: "Moxico", municipio: "Luena", urgencia24h: true, horario: "24 horas", especialidades: ESP_BASE },
-  { nome: "Hospital Geral do Namibe", tipo: "HOSPITAL_PUBLICO", provincia: "Namibe", municipio: "Moçâmedes", urgencia24h: true, horario: "24 horas", especialidades: ESP_BASE },
-  { nome: "Hospital Geral do Uíge", tipo: "HOSPITAL_PUBLICO", provincia: "Uíge", municipio: "Uíge", urgencia24h: true, horario: "24 horas", especialidades: ESP_BASE },
-  { nome: "Hospital Provincial do Zaire", tipo: "HOSPITAL_PUBLICO", provincia: "Zaire", municipio: "M'banza Kongo", urgencia24h: true, horario: "24 horas", especialidades: ESP_BASE },
-  { nome: "Hospital Geral do Dundo", tipo: "HOSPITAL_PUBLICO", provincia: "Lunda Norte", municipio: "Chitato", urgencia24h: true, horario: "24 horas", especialidades: ESP_BASE },
-  { nome: "Hospital Geral de Saurimo", tipo: "HOSPITAL_PUBLICO", provincia: "Lunda Sul", municipio: "Saurimo", urgencia24h: true, horario: "24 horas", especialidades: ESP_BASE },
-  { nome: "Hospital Geral do Bengo (Caxito)", tipo: "HOSPITAL_PUBLICO", provincia: "Bengo", municipio: "Dande", urgencia24h: true, horario: "24 horas", especialidades: ESP_BASE },
-];
+function chaveUnidade(nome: string, provincia: string, municipio: string) {
+  return [nome, provincia, municipio].map(normalizar).join("|");
+}
 
-// Clínicas e hospitais privados reais.
-const CLINICAS_PRIVADAS: UnidadeSeed[] = [
-  { nome: "Clínica Sagrada Esperança – Ilha de Luanda", rede: "Clínica Sagrada Esperança", tipo: "CLINICA_PRIVADA", provincia: "Luanda", municipio: "Luanda", morada: "Ilha de Luanda", urgencia24h: true, horario: "24 horas", logoUrl: "https://logo.clearbit.com/clinicasagradaesperanca.co.ao", descricao: "A maior rede privada de saúde de Angola, presente em várias províncias.", especialidades: ["Cardiologia", "Dermatologia", "Oftalmologia", "Ginecologia-Obstetrícia", "Ortopedia"], seguradoras: ["ENSA Seguros", "Fidelidade Angola", "NOSSA Seguros", "Saham Angola"] },
-  { nome: "Clínica Sagrada Esperança – Talatona", rede: "Clínica Sagrada Esperança", tipo: "CLINICA_PRIVADA", provincia: "Luanda", municipio: "Belas", urgencia24h: true, horario: "24 horas", logoUrl: "https://logo.clearbit.com/clinicasagradaesperanca.co.ao", especialidades: ["Clínica Geral", "Pediatria", "Cardiologia"], seguradoras: ["ENSA Seguros", "Fidelidade Angola", "NOSSA Seguros"] },
-  { nome: "Clínica Sagrada Esperança – Benguela", rede: "Clínica Sagrada Esperança", tipo: "CLINICA_PRIVADA", provincia: "Benguela", municipio: "Benguela", horario: "Seg-Sáb, 08h-20h", logoUrl: "https://logo.clearbit.com/clinicasagradaesperanca.co.ao", especialidades: ["Clínica Geral", "Pediatria"], seguradoras: ["ENSA Seguros", "Fidelidade Angola"] },
-  { nome: "Clínica Girassol", tipo: "CLINICA_PRIVADA", provincia: "Luanda", municipio: "Luanda", morada: "Rua Manuel Fernando Caldeira", urgencia24h: true, horario: "24 horas", logoUrl: "https://logo.clearbit.com/clinicagirassol.co.ao", descricao: "Hospital privado de referência em cardiologia, neurologia e ortopedia.", especialidades: ["Neurologia", "Cardiologia", "Urologia", "Medicina Interna", "Estomatologia"], seguradoras: ["ENSA Seguros", "Global Seguros", "Saham Angola"] },
-  { nome: "Clínica Multiperfil", tipo: "CLINICA_PRIVADA", provincia: "Luanda", municipio: "Belas", horario: "Seg-Sáb, 07h-20h", especialidades: ["Pediatria", "Ginecologia-Obstetrícia", "Oftalmologia", "Otorrinolaringologia"], seguradoras: ["Fidelidade Angola", "NOSSA Seguros"] },
-  { nome: "Clínica Endiama", tipo: "CLINICA_PRIVADA", provincia: "Luanda", municipio: "Ingombota", horario: "Seg-Sex, 07h-19h", especialidades: ["Clínica Geral", "Cardiologia", "Análises Clínicas"], seguradoras: ["ENSA Seguros", "Global Seguros"] },
-  { nome: "Clínica do Lobito", tipo: "CLINICA_PRIVADA", provincia: "Benguela", municipio: "Lobito", horario: "Seg-Sáb, 08h-19h", especialidades: ["Clínica Geral", "Pediatria", "Análises Clínicas"], seguradoras: ["ENSA Seguros"] },
-  { nome: "Clínica do Huambo Saúde+", tipo: "CLINICA_PRIVADA", provincia: "Huambo", municipio: "Huambo", horario: "Seg-Sáb, 08h-18h", especialidades: ["Clínica Geral", "Análises Clínicas", "Estomatologia"], seguradoras: ["ENSA Seguros", "Global Seguros"] },
-];
-
-// Redes de farmácias.
-const FARMACIAS: UnidadeSeed[] = [
-  { nome: "Farmácia Popular – Morro Bento", rede: "Farmácia Popular", tipo: "FARMACIA", provincia: "Luanda", municipio: "Belas", morada: "Rua Pedro de Castro Van-Dúnem Loy", urgencia24h: true, horario: "08h-21h", logoUrl: "https://logo.clearbit.com/farmaciapopular.co.ao", seguradoras: ["ENSA Seguros", "Fidelidade Angola", "NOSSA Seguros"] },
-  { nome: "Farmácia Popular – Camama", rede: "Farmácia Popular", tipo: "FARMACIA", provincia: "Luanda", municipio: "Kilamba Kiaxi", horario: "08h-21h", logoUrl: "https://logo.clearbit.com/farmaciapopular.co.ao", seguradoras: ["NOSSA Seguros", "Saham Angola"] },
-  { nome: "Farmácia Popular – Luanda Porto", rede: "Farmácia Popular", tipo: "FARMACIA", provincia: "Luanda", municipio: "Ingombota", morada: "Rua Major Kanhangulo", horario: "08h-21h", logoUrl: "https://logo.clearbit.com/farmaciapopular.co.ao", seguradoras: ["Fidelidade Angola"] },
-  { nome: "Farmácia Popular – Lubango", rede: "Farmácia Popular", tipo: "FARMACIA", provincia: "Huíla", municipio: "Lubango", horario: "08h-21h", logoUrl: "https://logo.clearbit.com/farmaciapopular.co.ao", seguradoras: ["ENSA Seguros"] },
-  { nome: "Farmácia Central de Luanda", tipo: "FARMACIA", provincia: "Luanda", municipio: "Luanda", morada: "Rua Rainha Ginga", urgencia24h: true, horario: "24 horas", seguradoras: ["ENSA Seguros", "NOSSA Seguros"] },
-  { nome: "Farmácia Benguela Saúde", tipo: "FARMACIA", provincia: "Benguela", municipio: "Benguela", horario: "Seg-Sáb, 08h-20h", seguradoras: ["Global Seguros"] },
-  { nome: "Farmácia do Lubango", tipo: "FARMACIA", provincia: "Huíla", municipio: "Lubango", horario: "Seg-Sáb, 08h-20h", seguradoras: ["ENSA Seguros"] },
-  { nome: "Farmácia do Huambo", tipo: "FARMACIA", provincia: "Huambo", municipio: "Huambo", horario: "Seg-Sáb, 08h-20h", seguradoras: ["Fidelidade Angola"] },
-];
-
-const UNIDADES: UnidadeSeed[] = [
-  ...HOSPITAIS_PUBLICOS,
-  ...CLINICAS_PRIVADAS,
-  ...FARMACIAS,
-];
+function chaveNomeProvincia(nome: string, provincia: string) {
+  return [nome, provincia].map(normalizar).join("|");
+}
 
 async function main() {
-  console.log("A semear a base de dados do PSN…");
+  console.log("A carregar a rede nacional de saúde do PSN…");
 
-  // Seguradoras
+  const nomesAtivos = SEGURADORAS.map((s) => s.nome);
+  await prisma.seguradora.updateMany({
+    where: { nome: { notIn: nomesAtivos } },
+    data: { ativo: false },
+  });
+
   const seguradoras = new Map<string, string>();
-  for (const s of SEGURADORAS) {
-    const r = await prisma.seguradora.upsert({
-      where: { nome: s.nome },
-      update: { sigla: s.sigla, logoUrl: s.logoUrl },
-      create: s,
+  for (const seguradora of SEGURADORAS) {
+    const registo = await prisma.seguradora.upsert({
+      where: { nome: seguradora.nome },
+      update: { sigla: seguradora.sigla, logoUrl: seguradora.logoUrl, ativo: true },
+      create: { ...seguradora, ativo: true },
     });
-    seguradoras.set(s.nome, r.id);
+    seguradoras.set(seguradora.nome, registo.id);
   }
 
-  // Especialidades
+  const nomesEspecialidades = new Set(ESPECIALIDADES_BASE);
+  for (const unidade of UNIDADES) {
+    for (const nome of unidade.especialidades) nomesEspecialidades.add(nome);
+  }
+
   const especialidades = new Map<string, string>();
-  for (const nome of ESPECIALIDADES) {
-    const r = await prisma.especialidade.upsert({
+  for (const nome of nomesEspecialidades) {
+    const registo = await prisma.especialidade.upsert({
       where: { nome },
       update: {},
       create: { nome },
     });
-    especialidades.set(nome, r.id);
+    especialidades.set(nome, registo.id);
   }
 
-  // Contas de teste (sempre garantidas, de forma idempotente).
-  for (const u of UTENTES_TESTE) {
-    const passwordHash = await argon2.hash(u.password, { type: argon2.argon2id });
+  for (const utente of UTENTES_TESTE) {
+    const passwordHash = await argon2.hash(utente.password, { type: argon2.argon2id });
     await prisma.utente.upsert({
-      where: { numeroDocumento: u.numeroDocumento },
-      update: { papel: u.papel, nomeCompleto: u.nomeCompleto, passwordHash },
+      where: { numeroDocumento: utente.numeroDocumento },
+      update: {
+        papel: utente.papel,
+        nomeCompleto: utente.nomeCompleto,
+        passwordHash,
+      },
       create: {
         tipoDocumento: "BI",
-        numeroDocumento: u.numeroDocumento,
-        nomeCompleto: u.nomeCompleto,
+        numeroDocumento: utente.numeroDocumento,
+        nomeCompleto: utente.nomeCompleto,
         dataNascimento: new Date("1990-01-01"),
-        sexo: u.sexo,
-        papel: u.papel,
-        telefone: u.telefone ?? null,
-        provincia: u.provincia ?? null,
-        municipio: u.municipio ?? null,
+        sexo: utente.sexo,
+        papel: utente.papel,
+        telefone: utente.telefone ?? null,
+        provincia: utente.provincia ?? null,
+        municipio: utente.municipio ?? null,
         passwordHash,
         fichaSaude: { create: {} },
       },
     });
   }
-  console.log(`Contas de teste garantidas: ${UTENTES_TESTE.length}.`);
 
-  // Unidades — aditivo e idempotente: cria apenas as que ainda não existem
-  // (por nome), preservando dados e edições do admin nas já existentes.
+  // Uma única leitura permite reconciliar os dados já existentes sem executar
+  // uma consulta por unidade. O ID externo torna os arranques seguintes rápidos
+  // e idempotentes; o nome/localização cobre a primeira atualização da base.
+  const existentes = await prisma.unidade.findMany({
+    select: {
+      id: true,
+      fonteExternaId: true,
+      nome: true,
+      provincia: true,
+      municipio: true,
+    },
+  });
+  const porFonte = new Map(
+    existentes.filter((u) => u.fonteExternaId).map((u) => [u.fonteExternaId!, u]),
+  );
+  const porChave = new Map<string, typeof existentes>();
+  const porNomeProvincia = new Map<string, typeof existentes>();
+  for (const unidade of existentes) {
+    const chave = chaveUnidade(unidade.nome, unidade.provincia, unidade.municipio);
+    porChave.set(chave, [...(porChave.get(chave) ?? []), unidade]);
+    const chaveCurta = chaveNomeProvincia(unidade.nome, unidade.provincia);
+    porNomeProvincia.set(chaveCurta, [...(porNomeProvincia.get(chaveCurta) ?? []), unidade]);
+  }
+  const usados = new Set<string>();
+
   let criadas = 0;
-  for (const u of UNIDADES) {
-    const existe = await prisma.unidade.findFirst({ where: { nome: u.nome } });
-    if (existe) {
-      // Backfill de rede/logótipo em falta (não sobrepõe edições do admin).
-      const dados: { rede?: string; logoUrl?: string } = {};
-      if (u.rede && !existe.rede) dados.rede = u.rede;
-      if (u.logoUrl && !existe.logoUrl) dados.logoUrl = u.logoUrl;
-      if (Object.keys(dados).length > 0) {
-        await prisma.unidade.update({ where: { id: existe.id }, data: dados });
+  let atualizadas = 0;
+  const tamanhoLote = 40;
+
+  for (let inicio = 0; inicio < UNIDADES.length; inicio += tamanhoLote) {
+    const lote = UNIDADES.slice(inicio, inicio + tamanhoLote);
+    const operacoes = lote.map((unidade) => {
+      const exato = porFonte.get(unidade.fonteExternaId);
+      const candidatosChave = porChave.get(
+        chaveUnidade(unidade.nome, unidade.provincia, unidade.municipio),
+      );
+      const candidatosNome = porNomeProvincia.get(
+        chaveNomeProvincia(unidade.nome, unidade.provincia),
+      );
+      const existente =
+        (exato && !usados.has(exato.id) ? exato : undefined) ??
+        candidatosChave?.find((u) => !usados.has(u.id)) ??
+        (candidatosNome?.length === 1 && !usados.has(candidatosNome[0].id)
+          ? candidatosNome[0]
+          : undefined);
+
+      const relSeguradoras = unidade.seguradoras
+        .map((nome) => seguradoras.get(nome))
+        .filter((id): id is string => Boolean(id))
+        .map((id) => ({ seguradora: { connect: { id } } }));
+      const relEspecialidades = unidade.especialidades
+        .map((nome) => especialidades.get(nome))
+        .filter((id): id is string => Boolean(id))
+        .map((id) => ({ especialidade: { connect: { id } } }));
+
+      const dados = {
+        fonteExternaId: unidade.fonteExternaId,
+        nome: unidade.nome,
+        tipo: unidade.tipo,
+        provincia: unidade.provincia,
+        municipio: unidade.municipio,
+        morada: nulo(unidade.morada),
+        telefone: nulo(unidade.telefone),
+        email: nulo(unidade.email),
+        servicos: nulo(unidade.servicos),
+        fonteUrl: nulo(unidade.fonteUrl),
+        validacao: nulo(unidade.validacao),
+        observacoes: nulo(unidade.observacoes),
+        ativo: true,
+      };
+
+      if (existente) {
+        usados.add(existente.id);
+        atualizadas++;
+        return prisma.unidade.update({
+          where: { id: existente.id },
+          data: {
+            ...dados,
+            especialidades: { deleteMany: {}, create: relEspecialidades },
+            seguradoras: { deleteMany: {}, create: relSeguradoras },
+          },
+        });
       }
-      continue;
-    }
-    criadas++;
-    await prisma.unidade.create({
-      data: {
-        nome: u.nome,
-        tipo: u.tipo,
-        provincia: u.provincia,
-        municipio: u.municipio,
-        morada: u.morada,
-        telefone: u.telefone,
-        urgencia24h: u.urgencia24h ?? false,
-        horario: u.horario,
-        logoUrl: u.logoUrl,
-        descricao: u.descricao,
-        rede: u.rede,
-        especialidades: {
-          create: (u.especialidades ?? []).map((nome) => ({
-            especialidade: { connect: { id: especialidades.get(nome)! } },
-          })),
+
+      criadas++;
+      return prisma.unidade.create({
+        data: {
+          ...dados,
+          especialidades: { create: relEspecialidades },
+          seguradoras: { create: relSeguradoras },
         },
-        seguradoras: {
-          create: (u.seguradoras ?? []).map((nome) => ({
-            seguradora: { connect: { id: seguradoras.get(nome)! } },
-          })),
-        },
-        medicos: {
-          create: (u.medicos ?? []).map((m) => ({
-            nome: m.nome,
-            disponivel: true,
-            especialidade: { connect: { id: especialidades.get(m.especialidade)! } },
-          })),
-        },
-      },
+      });
     });
+
+    await prisma.$transaction(operacoes);
+    console.log(`Unidades processadas: ${Math.min(inicio + tamanhoLote, UNIDADES.length)}/${UNIDADES.length}`);
   }
 
   console.log(
-    `Concluído: ${SEGURADORAS.length} seguradoras, ${ESPECIALIDADES.length} especialidades, ${UNIDADES.length} unidades no catálogo (${criadas} novas criadas).`,
+    `Concluído: ${UNIDADES.length} unidades (${criadas} novas, ${atualizadas} atualizadas), ` +
+      `${SEGURADORAS.length} seguradoras/redes e ${nomesEspecialidades.size} especialidades.`,
   );
 }
 
 main()
-  .catch((e) => {
-    console.error(e);
+  .catch((erro) => {
+    console.error(erro);
     process.exit(1);
   })
   .finally(async () => {

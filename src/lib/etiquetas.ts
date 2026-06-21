@@ -8,8 +8,15 @@ import type {
 } from "@prisma/client";
 
 export const ETIQUETA_TIPO_UNIDADE: Record<TipoUnidade, string> = {
-  HOSPITAL_PUBLICO: "Hospital público",
+  HOSPITAL_PUBLICO: "Hospital público / SNS",
+  UNIDADE_HOSPITALAR: "Hospital / unidade hospitalar",
   CLINICA_PRIVADA: "Clínica privada",
+  CENTRO_MEDICO: "Centro médico",
+  CLINICA_DENTARIA: "Clínica dentária",
+  LABORATORIO: "Diagnóstico / laboratório",
+  FISIOTERAPIA: "Fisioterapia / reabilitação",
+  OPTICA: "Óptica",
+  PRESTADOR_SAUDE: "Prestador de saúde",
   FARMACIA: "Farmácia",
 };
 
