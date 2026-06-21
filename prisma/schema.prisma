@@ -175,7 +175,7 @@ model Especialidade {
 
 model Unidade {
   id            String                 @id @default(cuid())
-  fonteExternaId String?                @unique
+  fonteExternaId String?
   nome          String
   tipo          TipoUnidade
   provincia     String
@@ -211,6 +211,7 @@ model Unidade {
   @@index([provincia, municipio])
   @@index([tipo])
   @@index([rede])
+  @@index([fonteExternaId])
 }
 
 // N:N Unidade ↔ Especialidade
