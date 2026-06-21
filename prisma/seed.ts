@@ -52,13 +52,22 @@ const UTENTES_TESTE: {
   },
 ];
 
-// Seguradoras de saúde com presença em Angola (dados ilustrativos do MVP).
+// Seguradoras reais com presença em Angola (fonte: ARSEG / pesquisa de mercado).
+// O logótipo é obtido por domínio (Clearbit) com reserva elegante no portal.
+function logo(dominio: string) {
+  return `https://logo.clearbit.com/${dominio}`;
+}
 const SEGURADORAS = [
-  { nome: "ENSA Seguros", sigla: "ENSA" },
-  { nome: "Fidelidade Angola", sigla: "FID" },
-  { nome: "Global Seguros", sigla: "GLB" },
-  { nome: "NOSSA Seguros", sigla: "NOSSA" },
-  { nome: "Saham Angola", sigla: "SAHAM" },
+  { nome: "ENSA Seguros", sigla: "ENSA", logoUrl: logo("ensa.co.ao") },
+  { nome: "Fidelidade Angola", sigla: "FID", logoUrl: logo("fidelidade.co.ao") },
+  { nome: "NOSSA Seguros", sigla: "NOSSA", logoUrl: logo("nossaseguros.ao") },
+  { nome: "Global Seguros", sigla: "GLB", logoUrl: logo("globalseguros.co.ao") },
+  { nome: "Saham Angola", sigla: "SAHAM", logoUrl: logo("saham.co.ao") },
+  { nome: "BIC Seguros", sigla: "BIC", logoUrl: logo("bicseguros.ao") },
+  { nome: "Tranquilidade Angola", sigla: "TRANQ", logoUrl: logo("tranquilidade.co.ao") },
+  { nome: "AAA Seguros", sigla: "AAA", logoUrl: logo("aaaseguros.co.ao") },
+  { nome: "Prudencial Seguros", sigla: "PRUD", logoUrl: logo("prudencial.co.ao") },
+  { nome: "Fortaleza Seguros", sigla: "FORT", logoUrl: logo("fortalezaseguros.co.ao") },
 ];
 
 const ESPECIALIDADES = [
@@ -77,146 +86,70 @@ interface UnidadeSeed {
   telefone?: string;
   urgencia24h?: boolean;
   horario?: string;
+  logoUrl?: string;
+  descricao?: string;
   especialidades?: string[];
   seguradoras?: string[];
   medicos?: { nome: string; especialidade: string }[];
 }
 
+const ESP_BASE = ["Clínica Geral", "Medicina Interna", "Pediatria", "Cirurgia Geral"];
+
+// Hospitais públicos provinciais reais (um a vários por província).
+const HOSPITAIS_PUBLICOS: UnidadeSeed[] = [
+  { nome: "Hospital Geral de Luanda", tipo: "HOSPITAL_PUBLICO", provincia: "Luanda", municipio: "Luanda", morada: "Rua Comandante Gika", urgencia24h: true, horario: "24 horas", especialidades: ["Clínica Geral", "Medicina Interna", "Cirurgia Geral", "Cardiologia", "Ortopedia"] },
+  { nome: "Hospital Geral Américo Boavida", tipo: "HOSPITAL_PUBLICO", provincia: "Luanda", municipio: "Maianga", urgencia24h: true, horario: "24 horas", especialidades: ["Clínica Geral", "Cardiologia", "Neurologia", "Cirurgia Geral"] },
+  { nome: "Hospital Josina Machel (Maria Pia)", tipo: "HOSPITAL_PUBLICO", provincia: "Luanda", municipio: "Ingombota", urgencia24h: true, horario: "24 horas", especialidades: ["Clínica Geral", "Ortopedia", "Cirurgia Geral", "Medicina Interna"] },
+  { nome: "Hospital Pediátrico David Bernardino", tipo: "HOSPITAL_PUBLICO", provincia: "Luanda", municipio: "Luanda", urgencia24h: true, horario: "24 horas", especialidades: ["Pediatria", "Clínica Geral"] },
+  { nome: "Hospital Geral dos Cajueiros", tipo: "HOSPITAL_PUBLICO", provincia: "Luanda", municipio: "Cazenga", urgencia24h: true, horario: "24 horas", logoUrl: "https://logo.clearbit.com/hgc.gov.ao", especialidades: ["Clínica Geral", "Pediatria", "Ginecologia-Obstetrícia"] },
+  { nome: "Hospital Materno-Infantil Lucrécia Paím", tipo: "HOSPITAL_PUBLICO", provincia: "Luanda", municipio: "Ingombota", urgencia24h: true, horario: "24 horas", especialidades: ["Ginecologia-Obstetrícia", "Pediatria"] },
+  { nome: "Hospital Geral do Kilamba", tipo: "HOSPITAL_PUBLICO", provincia: "Luanda", municipio: "Belas", urgencia24h: true, horario: "24 horas", especialidades: ESP_BASE },
+  { nome: "Hospital Central de Benguela", tipo: "HOSPITAL_PUBLICO", provincia: "Benguela", municipio: "Catumbela", urgencia24h: true, horario: "24 horas", especialidades: ["Clínica Geral", "Medicina Interna", "Pediatria", "Cirurgia Geral"] },
+  { nome: "Hospital Geral do Lobito", tipo: "HOSPITAL_PUBLICO", provincia: "Benguela", municipio: "Lobito", urgencia24h: true, horario: "24 horas", especialidades: ESP_BASE },
+  { nome: "Hospital Central do Huambo", tipo: "HOSPITAL_PUBLICO", provincia: "Huambo", municipio: "Huambo", urgencia24h: true, horario: "24 horas", especialidades: ["Clínica Geral", "Cirurgia Geral", "Ortopedia", "Pediatria"] },
+  { nome: "Hospital Central da Huíla – Dr. António Agostinho Neto", tipo: "HOSPITAL_PUBLICO", provincia: "Huíla", municipio: "Lubango", urgencia24h: true, horario: "24 horas", especialidades: ["Clínica Geral", "Medicina Interna", "Cirurgia Geral"] },
+  { nome: "Hospital Central de Cabinda", tipo: "HOSPITAL_PUBLICO", provincia: "Cabinda", municipio: "Cabinda", urgencia24h: true, horario: "24 horas", especialidades: ESP_BASE },
+  { nome: "Hospital Geral do Bié (Kuito)", tipo: "HOSPITAL_PUBLICO", provincia: "Bié", municipio: "Kuito", urgencia24h: true, horario: "24 horas", especialidades: ESP_BASE },
+  { nome: "Hospital Geral de Ondjiva", tipo: "HOSPITAL_PUBLICO", provincia: "Cunene", municipio: "Ondjiva", urgencia24h: true, horario: "24 horas", especialidades: ESP_BASE },
+  { nome: "Hospital Provincial de Menongue", tipo: "HOSPITAL_PUBLICO", provincia: "Cuando Cubango", municipio: "Menongue", urgencia24h: true, horario: "24 horas", especialidades: ESP_BASE },
+  { nome: "Hospital Geral do Sumbe", tipo: "HOSPITAL_PUBLICO", provincia: "Cuanza Sul", municipio: "Sumbe", urgencia24h: true, horario: "24 horas", especialidades: ESP_BASE },
+  { nome: "Hospital Geral de N'dalatando", tipo: "HOSPITAL_PUBLICO", provincia: "Cuanza Norte", municipio: "Cazengo", urgencia24h: true, horario: "24 horas", especialidades: ESP_BASE },
+  { nome: "Hospital Geral de Malanje", tipo: "HOSPITAL_PUBLICO", provincia: "Malanje", municipio: "Malanje", urgencia24h: true, horario: "24 horas", especialidades: ESP_BASE },
+  { nome: "Hospital Geral do Luena", tipo: "HOSPITAL_PUBLICO", provincia: "Moxico", municipio: "Luena", urgencia24h: true, horario: "24 horas", especialidades: ESP_BASE },
+  { nome: "Hospital Geral do Namibe", tipo: "HOSPITAL_PUBLICO", provincia: "Namibe", municipio: "Moçâmedes", urgencia24h: true, horario: "24 horas", especialidades: ESP_BASE },
+  { nome: "Hospital Geral do Uíge", tipo: "HOSPITAL_PUBLICO", provincia: "Uíge", municipio: "Uíge", urgencia24h: true, horario: "24 horas", especialidades: ESP_BASE },
+  { nome: "Hospital Provincial do Zaire", tipo: "HOSPITAL_PUBLICO", provincia: "Zaire", municipio: "M'banza Kongo", urgencia24h: true, horario: "24 horas", especialidades: ESP_BASE },
+  { nome: "Hospital Geral do Dundo", tipo: "HOSPITAL_PUBLICO", provincia: "Lunda Norte", municipio: "Chitato", urgencia24h: true, horario: "24 horas", especialidades: ESP_BASE },
+  { nome: "Hospital Geral de Saurimo", tipo: "HOSPITAL_PUBLICO", provincia: "Lunda Sul", municipio: "Saurimo", urgencia24h: true, horario: "24 horas", especialidades: ESP_BASE },
+  { nome: "Hospital Geral do Bengo (Caxito)", tipo: "HOSPITAL_PUBLICO", provincia: "Bengo", municipio: "Dande", urgencia24h: true, horario: "24 horas", especialidades: ESP_BASE },
+];
+
+// Clínicas e hospitais privados reais.
+const CLINICAS_PRIVADAS: UnidadeSeed[] = [
+  { nome: "Clínica Sagrada Esperança – Ilha de Luanda", tipo: "CLINICA_PRIVADA", provincia: "Luanda", municipio: "Luanda", morada: "Ilha de Luanda", urgencia24h: true, horario: "24 horas", logoUrl: "https://logo.clearbit.com/clinicasagradaesperanca.co.ao", descricao: "A maior rede privada de saúde de Angola, presente em várias províncias.", especialidades: ["Cardiologia", "Dermatologia", "Oftalmologia", "Ginecologia-Obstetrícia", "Ortopedia"], seguradoras: ["ENSA Seguros", "Fidelidade Angola", "NOSSA Seguros", "Saham Angola"] },
+  { nome: "Clínica Sagrada Esperança – Talatona", tipo: "CLINICA_PRIVADA", provincia: "Luanda", municipio: "Belas", urgencia24h: true, horario: "24 horas", logoUrl: "https://logo.clearbit.com/clinicasagradaesperanca.co.ao", especialidades: ["Clínica Geral", "Pediatria", "Cardiologia"], seguradoras: ["ENSA Seguros", "Fidelidade Angola", "NOSSA Seguros"] },
+  { nome: "Clínica Girassol", tipo: "CLINICA_PRIVADA", provincia: "Luanda", municipio: "Luanda", morada: "Rua Manuel Fernando Caldeira", urgencia24h: true, horario: "24 horas", logoUrl: "https://logo.clearbit.com/clinicagirassol.co.ao", descricao: "Hospital privado de referência em cardiologia, neurologia e ortopedia.", especialidades: ["Neurologia", "Cardiologia", "Urologia", "Medicina Interna", "Estomatologia"], seguradoras: ["ENSA Seguros", "Global Seguros", "Saham Angola"] },
+  { nome: "Clínica Multiperfil", tipo: "CLINICA_PRIVADA", provincia: "Luanda", municipio: "Belas", horario: "Seg-Sáb, 07h-20h", especialidades: ["Pediatria", "Ginecologia-Obstetrícia", "Oftalmologia", "Otorrinolaringologia"], seguradoras: ["Fidelidade Angola", "NOSSA Seguros"] },
+  { nome: "Clínica Endiama", tipo: "CLINICA_PRIVADA", provincia: "Luanda", municipio: "Ingombota", horario: "Seg-Sex, 07h-19h", especialidades: ["Clínica Geral", "Cardiologia", "Análises Clínicas"], seguradoras: ["ENSA Seguros", "Global Seguros"] },
+  { nome: "Clínica do Lobito", tipo: "CLINICA_PRIVADA", provincia: "Benguela", municipio: "Lobito", horario: "Seg-Sáb, 08h-19h", especialidades: ["Clínica Geral", "Pediatria", "Análises Clínicas"], seguradoras: ["ENSA Seguros"] },
+  { nome: "Clínica do Huambo Saúde+", tipo: "CLINICA_PRIVADA", provincia: "Huambo", municipio: "Huambo", horario: "Seg-Sáb, 08h-18h", especialidades: ["Clínica Geral", "Análises Clínicas", "Estomatologia"], seguradoras: ["ENSA Seguros", "Global Seguros"] },
+];
+
+// Redes de farmácias.
+const FARMACIAS: UnidadeSeed[] = [
+  { nome: "Farmácia Popular – Morro Bento", tipo: "FARMACIA", provincia: "Luanda", municipio: "Belas", morada: "Rua Pedro de Castro Van-Dúnem Loy", urgencia24h: true, horario: "08h-21h", logoUrl: "https://logo.clearbit.com/farmaciapopular.co.ao", seguradoras: ["ENSA Seguros", "Fidelidade Angola", "NOSSA Seguros"] },
+  { nome: "Farmácia Popular – Camama", tipo: "FARMACIA", provincia: "Luanda", municipio: "Kilamba Kiaxi", horario: "08h-21h", logoUrl: "https://logo.clearbit.com/farmaciapopular.co.ao", seguradoras: ["NOSSA Seguros", "Saham Angola"] },
+  { nome: "Farmácia Popular – Luanda Porto", tipo: "FARMACIA", provincia: "Luanda", municipio: "Ingombota", morada: "Rua Major Kanhangulo", horario: "08h-21h", logoUrl: "https://logo.clearbit.com/farmaciapopular.co.ao", seguradoras: ["Fidelidade Angola"] },
+  { nome: "Farmácia Central de Luanda", tipo: "FARMACIA", provincia: "Luanda", municipio: "Luanda", morada: "Rua Rainha Ginga", urgencia24h: true, horario: "24 horas", seguradoras: ["ENSA Seguros", "NOSSA Seguros"] },
+  { nome: "Farmácia Benguela Saúde", tipo: "FARMACIA", provincia: "Benguela", municipio: "Benguela", horario: "Seg-Sáb, 08h-20h", seguradoras: ["Global Seguros"] },
+  { nome: "Farmácia do Lubango", tipo: "FARMACIA", provincia: "Huíla", municipio: "Lubango", horario: "Seg-Sáb, 08h-20h", seguradoras: ["ENSA Seguros"] },
+  { nome: "Farmácia do Huambo", tipo: "FARMACIA", provincia: "Huambo", municipio: "Huambo", horario: "Seg-Sáb, 08h-20h", seguradoras: ["Fidelidade Angola"] },
+];
+
 const UNIDADES: UnidadeSeed[] = [
-  {
-    nome: "Hospital Geral de Luanda",
-    tipo: "HOSPITAL_PUBLICO",
-    provincia: "Luanda",
-    municipio: "Luanda",
-    morada: "Rua Comandante Gika",
-    telefone: "+244 222 000 100",
-    urgencia24h: true,
-    horario: "24 horas",
-    especialidades: ["Clínica Geral", "Medicina Interna", "Cirurgia Geral", "Cardiologia", "Ortopedia"],
-    medicos: [
-      { nome: "Dr. Joaquim Bengui", especialidade: "Cardiologia" },
-      { nome: "Dra. Maria Sebastião", especialidade: "Medicina Interna" },
-    ],
-  },
-  {
-    nome: "Hospital dos Cajueiros",
-    tipo: "HOSPITAL_PUBLICO",
-    provincia: "Luanda",
-    municipio: "Cazenga",
-    telefone: "+244 222 000 200",
-    urgencia24h: true,
-    horario: "24 horas",
-    especialidades: ["Clínica Geral", "Pediatria", "Ginecologia-Obstetrícia"],
-    medicos: [{ nome: "Dra. Esperança Lutucuta", especialidade: "Pediatria" }],
-  },
-  {
-    nome: "Hospital Pediátrico David Bernardino",
-    tipo: "HOSPITAL_PUBLICO",
-    provincia: "Luanda",
-    municipio: "Luanda",
-    telefone: "+244 222 000 300",
-    urgencia24h: true,
-    horario: "24 horas",
-    especialidades: ["Pediatria", "Clínica Geral"],
-    medicos: [{ nome: "Dr. António Kiala", especialidade: "Pediatria" }],
-  },
-  {
-    nome: "Hospital Central do Huambo",
-    tipo: "HOSPITAL_PUBLICO",
-    provincia: "Huambo",
-    municipio: "Huambo",
-    telefone: "+244 241 000 100",
-    urgencia24h: true,
-    horario: "24 horas",
-    especialidades: ["Clínica Geral", "Cirurgia Geral", "Ortopedia"],
-  },
-  {
-    nome: "Hospital Geral de Benguela",
-    tipo: "HOSPITAL_PUBLICO",
-    provincia: "Benguela",
-    municipio: "Benguela",
-    telefone: "+244 272 000 100",
-    urgencia24h: true,
-    horario: "24 horas",
-    especialidades: ["Clínica Geral", "Medicina Interna", "Pediatria"],
-  },
-  {
-    nome: "Clínica Sagrada Esperança",
-    tipo: "CLINICA_PRIVADA",
-    provincia: "Luanda",
-    municipio: "Luanda",
-    morada: "Ilha de Luanda",
-    telefone: "+244 222 430 000",
-    urgencia24h: true,
-    horario: "Seg-Dom, 24 horas",
-    especialidades: ["Cardiologia", "Dermatologia", "Oftalmologia", "Ginecologia-Obstetrícia", "Ortopedia"],
-    seguradoras: ["ENSA Seguros", "Fidelidade Angola", "NOSSA Seguros", "Saham Angola"],
-    medicos: [
-      { nome: "Dr. Paulo Quessongo", especialidade: "Cardiologia" },
-      { nome: "Dra. Inês Capitão", especialidade: "Dermatologia" },
-    ],
-  },
-  {
-    nome: "Clínica Girassol",
-    tipo: "CLINICA_PRIVADA",
-    provincia: "Luanda",
-    municipio: "Luanda",
-    morada: "Rua Manuel Fernando Caldeira",
-    telefone: "+244 222 700 000",
-    urgencia24h: true,
-    horario: "Seg-Dom, 24 horas",
-    especialidades: ["Neurologia", "Cardiologia", "Urologia", "Medicina Interna", "Estomatologia"],
-    seguradoras: ["ENSA Seguros", "Global Seguros", "Saham Angola"],
-    medicos: [{ nome: "Dr. Manuel Domingos", especialidade: "Neurologia" }],
-  },
-  {
-    nome: "Clínica Multiperfil",
-    tipo: "CLINICA_PRIVADA",
-    provincia: "Luanda",
-    municipio: "Belas",
-    telefone: "+244 222 019 000",
-    horario: "Seg-Sáb, 07h-20h",
-    especialidades: ["Pediatria", "Ginecologia-Obstetrícia", "Oftalmologia", "Otorrinolaringologia"],
-    seguradoras: ["Fidelidade Angola", "NOSSA Seguros"],
-    medicos: [{ nome: "Dra. Teresa Mukinha", especialidade: "Ginecologia-Obstetrícia" }],
-  },
-  {
-    nome: "Clínica do Huambo Saúde+",
-    tipo: "CLINICA_PRIVADA",
-    provincia: "Huambo",
-    municipio: "Huambo",
-    telefone: "+244 241 200 000",
-    horario: "Seg-Sáb, 08h-18h",
-    especialidades: ["Clínica Geral", "Análises Clínicas", "Estomatologia"],
-    seguradoras: ["ENSA Seguros", "Global Seguros"],
-  },
-  {
-    nome: "Farmácia Central de Luanda",
-    tipo: "FARMACIA",
-    provincia: "Luanda",
-    municipio: "Luanda",
-    morada: "Rua Rainha Ginga",
-    telefone: "+244 222 333 444",
-    urgencia24h: true,
-    horario: "24 horas",
-    seguradoras: ["ENSA Seguros", "Fidelidade Angola", "NOSSA Seguros"],
-  },
-  {
-    nome: "Farmácia Popular do Kilamba",
-    tipo: "FARMACIA",
-    provincia: "Luanda",
-    municipio: "Belas",
-    horario: "Seg-Dom, 08h-22h",
-    seguradoras: ["NOSSA Seguros", "Saham Angola"],
-  },
-  {
-    nome: "Farmácia Benguela Saúde",
-    tipo: "FARMACIA",
-    provincia: "Benguela",
-    municipio: "Benguela",
-    horario: "Seg-Sáb, 08h-20h",
-    seguradoras: ["Global Seguros"],
-  },
+  ...HOSPITAIS_PUBLICOS,
+  ...CLINICAS_PRIVADAS,
+  ...FARMACIAS,
 ];
 
 async function main() {
@@ -227,7 +160,7 @@ async function main() {
   for (const s of SEGURADORAS) {
     const r = await prisma.seguradora.upsert({
       where: { nome: s.nome },
-      update: { sigla: s.sigla },
+      update: { sigla: s.sigla, logoUrl: s.logoUrl },
       create: s,
     });
     seguradoras.set(s.nome, r.id);
@@ -267,20 +200,13 @@ async function main() {
   }
   console.log(`Contas de teste garantidas: ${UTENTES_TESTE.length}.`);
 
-  // Unidades — idempotente: só cria se ainda não houver unidades, para o seed
-  // poder correr em cada deploy sem apagar dados (marcações, etc.).
-  const jaExistem = await prisma.unidade.count();
-  if (jaExistem > 0) {
-    console.log(
-      `Já existem ${jaExistem} unidades — seed de unidades ignorado.`,
-    );
-    console.log(
-      `Concluído: ${SEGURADORAS.length} seguradoras e ${ESPECIALIDADES.length} especialidades garantidas.`,
-    );
-    return;
-  }
-
+  // Unidades — aditivo e idempotente: cria apenas as que ainda não existem
+  // (por nome), preservando dados e edições do admin nas já existentes.
+  let criadas = 0;
   for (const u of UNIDADES) {
+    const existe = await prisma.unidade.findFirst({ where: { nome: u.nome } });
+    if (existe) continue;
+    criadas++;
     await prisma.unidade.create({
       data: {
         nome: u.nome,
@@ -291,6 +217,8 @@ async function main() {
         telefone: u.telefone,
         urgencia24h: u.urgencia24h ?? false,
         horario: u.horario,
+        logoUrl: u.logoUrl,
+        descricao: u.descricao,
         especialidades: {
           create: (u.especialidades ?? []).map((nome) => ({
             especialidade: { connect: { id: especialidades.get(nome)! } },
@@ -313,7 +241,7 @@ async function main() {
   }
 
   console.log(
-    `Concluído: ${SEGURADORAS.length} seguradoras, ${ESPECIALIDADES.length} especialidades, ${UNIDADES.length} unidades.`,
+    `Concluído: ${SEGURADORAS.length} seguradoras, ${ESPECIALIDADES.length} especialidades, ${UNIDADES.length} unidades no catálogo (${criadas} novas criadas).`,
   );
 }
 

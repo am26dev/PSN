@@ -2,6 +2,7 @@ import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { Hero } from "@/components/Hero";
 import { SLIDES_HERO } from "@/lib/imagens";
+import { LogoSeguradora } from "@/components/LogoSeguradora";
 
 export default async function HomePage() {
   const [hospitais, clinicas, farmacias] = await Promise.all([
@@ -9,6 +10,10 @@ export default async function HomePage() {
     prisma.unidade.count({ where: { tipo: "CLINICA_PRIVADA", ativo: true } }),
     prisma.unidade.count({ where: { tipo: "FARMACIA", ativo: true } }),
   ]).catch(() => [0, 0, 0]);
+
+  const seguradoras = await prisma.seguradora
+    .findMany({ orderBy: { nome: "asc" } })
+    .catch(() => []);
 
   return (
     <div className="space-y-16">
@@ -21,6 +26,20 @@ export default async function HomePage() {
         <Estatistica numero={clinicas} rotulo="Clínicas privadas" />
         <Estatistica numero={farmacias} rotulo="Farmácias" />
       </section>
+
+      {/* Seguradoras parceiras */}
+      {seguradoras.length > 0 && (
+        <section>
+          <h2 className="text-center text-sm font-semibold uppercase tracking-wide text-gray-400">
+            Seguradoras parceiras
+          </h2>
+          <div className="mt-4 flex flex-wrap items-center justify-center gap-3">
+            {seguradoras.map((s) => (
+              <LogoSeguradora key={s.id} nome={s.nome} logoUrl={s.logoUrl} />
+            ))}
+          </div>
+        </section>
+      )}
 
       {/* Funcionalidades */}
       <section>

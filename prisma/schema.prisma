@@ -150,6 +150,7 @@ model Seguradora {
   id         String              @id @default(cuid())
   nome       String              @unique
   sigla      String?
+  logoUrl    String?
   utentes    Utente[]
   unidades   UnidadeSeguradora[]
   criadoEm   DateTime            @default(now())

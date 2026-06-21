@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { utenteAtual } from "@/lib/auth";
 import { ETIQUETA_TIPO_UNIDADE } from "@/lib/etiquetas";
 import { fotoUnidade, bannerUnidade } from "@/lib/imagens";
+import { LogoSeguradora } from "@/components/LogoSeguradora";
 
 export default async function UnidadePage({
   params,
@@ -153,11 +154,13 @@ export default async function UnidadePage({
       <section>
         <h2 className="text-xl font-bold">Seguros de saúde aceites</h2>
         {unidade.seguradoras.length > 0 ? (
-          <div className="mt-3 flex flex-wrap gap-2">
+          <div className="mt-3 flex flex-wrap items-center gap-2">
             {unidade.seguradoras.map((s) => (
-              <span key={s.seguradoraId} className="badge bg-angola-gold/20 text-angola-gold-dark">
-                {s.seguradora.nome}
-              </span>
+              <LogoSeguradora
+                key={s.seguradoraId}
+                nome={s.seguradora.nome}
+                logoUrl={s.seguradora.logoUrl}
+              />
             ))}
           </div>
         ) : (
