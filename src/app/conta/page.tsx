@@ -12,6 +12,7 @@ import {
   ETIQUETA_ESTADO_PAGAMENTO,
   COR_ESTADO_PAGAMENTO,
 } from "@/lib/etiquetas";
+import { IconeVerificacao, IconeDocumento, IconeEstetoscopio } from "@/components/Icones";
 
 export default async function ContaPage() {
   const utente = await utenteAtual();
@@ -70,15 +71,20 @@ export default async function ContaPage() {
       {/* Verificação de identidade */}
       <Link
         href="/conta/verificacao"
-        className="card flex items-center justify-between p-5 transition hover:shadow-lg"
+        className="card flex items-center justify-between gap-4 p-5 transition hover:shadow-lg"
       >
-        <div>
-          <h2 className="font-bold">Verificação de identidade</h2>
-          <p className="text-sm text-gray-500">
-            {utente.verificado
-              ? "A sua identidade está verificada."
-              : "Confirme a sua identidade para acesso completo aos serviços."}
-          </p>
+        <div className="flex items-center gap-4">
+          <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-angola-gold/15 text-angola-gold-dark">
+            <IconeVerificacao className="h-6 w-6" />
+          </span>
+          <div>
+            <h2 className="font-bold">Verificação de identidade</h2>
+            <p className="text-sm text-gray-500">
+              {utente.verificado
+                ? "A sua identidade está verificada."
+                : "Confirme a sua identidade para acesso completo aos serviços."}
+            </p>
+          </div>
         </div>
         {utente.verificado ? (
           <span className="badge bg-green-100 text-green-700">Verificada ✓</span>
@@ -90,32 +96,42 @@ export default async function ContaPage() {
       {/* Histórico clínico */}
       <Link
         href="/conta/historico"
-        className="card flex items-center justify-between p-5 transition hover:shadow-lg"
+        className="card flex items-center justify-between gap-4 p-5 transition hover:shadow-lg"
       >
-        <div>
-          <h2 className="font-bold">Histórico clínico</h2>
-          <p className="text-sm text-gray-500">
-            Consulte os resultados dos seus exames, as suas consultas e
-            patologias. Informação privada, visível apenas a si e aos
-            profissionais de saúde.
-          </p>
+        <div className="flex items-center gap-4">
+          <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-angola-red/10 text-angola-red">
+            <IconeDocumento className="h-6 w-6" />
+          </span>
+          <div>
+            <h2 className="font-bold">Histórico clínico</h2>
+            <p className="text-sm text-gray-500">
+              Consulte os resultados dos seus exames, as suas consultas e
+              patologias. Informação privada, visível apenas a si e aos
+              profissionais de saúde.
+            </p>
+          </div>
         </div>
-        <span className="badge bg-angola-red/10 text-angola-red-dark">Ver →</span>
+        <span className="badge shrink-0 bg-angola-red/10 text-angola-red-dark">Ver →</span>
       </Link>
 
       {(utente.papel === "PROFISSIONAL" || utente.papel === "ADMIN") && (
         <Link
           href="/medico"
-          className="card flex items-center justify-between p-5 transition hover:shadow-lg"
+          className="card flex items-center justify-between gap-4 p-5 transition hover:shadow-lg"
         >
-          <div>
-            <h2 className="font-bold">Portal do Médico</h2>
-            <p className="text-sm text-gray-500">
-              Pesquise um paciente por BI ou NIF para consultar e registar o
-              respetivo histórico clínico.
-            </p>
+          <div className="flex items-center gap-4">
+            <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-angola-black/10 text-angola-black">
+              <IconeEstetoscopio className="h-6 w-6" />
+            </span>
+            <div>
+              <h2 className="font-bold">Portal do Médico</h2>
+              <p className="text-sm text-gray-500">
+                Pesquise um paciente por BI ou NIF para consultar e registar o
+                respetivo histórico clínico.
+              </p>
+            </div>
           </div>
-          <span className="badge bg-angola-black/10 text-angola-black">Aceder →</span>
+          <span className="badge shrink-0 bg-angola-black/10 text-angola-black">Aceder →</span>
         </Link>
       )}
 

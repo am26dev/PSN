@@ -1,3 +1,5 @@
+import { IconeEscudo, IconeEstetoscopio, IconeDocumento } from "@/components/Icones";
+
 interface Consulta {
   id: string;
   data: Date;
@@ -46,7 +48,10 @@ export function HistoricoClinico({
     <div className="space-y-8">
       {/* Patologias */}
       <section>
-        <h2 className="text-lg font-bold">Patologias / condições</h2>
+        <h2 className="flex items-center gap-2 text-lg font-bold">
+          <IconeEscudo className="h-5 w-5 text-angola-red" />
+          Patologias / condições
+        </h2>
         {patologias.length === 0 ? (
           <p className="mt-2 text-sm text-gray-500">Sem patologias registadas.</p>
         ) : (
@@ -63,7 +68,10 @@ export function HistoricoClinico({
 
       {/* Consultas */}
       <section>
-        <h2 className="text-lg font-bold">Histórico de consultas</h2>
+        <h2 className="flex items-center gap-2 text-lg font-bold">
+          <IconeEstetoscopio className="h-5 w-5 text-angola-red" />
+          Histórico de consultas
+        </h2>
         {consultas.length === 0 ? (
           <p className="mt-2 text-sm text-gray-500">Sem consultas registadas.</p>
         ) : (
@@ -89,7 +97,10 @@ export function HistoricoClinico({
 
       {/* Exames */}
       <section>
-        <h2 className="text-lg font-bold">Resultados de exames</h2>
+        <h2 className="flex items-center gap-2 text-lg font-bold">
+          <IconeDocumento className="h-5 w-5 text-angola-red" />
+          Resultados de exames
+        </h2>
         {exames.length === 0 ? (
           <p className="mt-2 text-sm text-gray-500">Sem exames registados.</p>
         ) : (

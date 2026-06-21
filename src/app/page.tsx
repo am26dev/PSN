@@ -4,6 +4,15 @@ import { Hero } from "@/components/Hero";
 import { SLIDES_HERO } from "@/lib/imagens";
 import { LogoSeguradora } from "@/components/LogoSeguradora";
 import { obterConteudos } from "@/lib/conteudo";
+import {
+  IconeRede,
+  IconeCalendario,
+  IconeFamilia,
+  IconeSeguro,
+  IconeUrgencia,
+  IconeEscudo,
+} from "@/components/Icones";
+import type { ComponentType } from "react";
 
 export default async function HomePage() {
   const [hospitais, prestadores, farmacias] = await Promise.all([
@@ -51,39 +60,55 @@ export default async function HomePage() {
         <h2 className="text-2xl font-bold">{c.home_funcionalidades_titulo}</h2>
         <div className="mt-6 grid gap-4 md:grid-cols-3">
           <Funcionalidade
+            Icone={IconeRede}
             titulo="Rede nacional"
             texto="Hospitais públicos, clínicas privadas e farmácias de todas as províncias, com pesquisa por proximidade e especialidade."
           />
           <Funcionalidade
+            Icone={IconeCalendario}
             titulo="Marcação de consultas"
             texto="Escolha a unidade, a especialidade e o médico disponível. Pague em Kwanzas por Multicaixa Express, transferência, seguro ou ao Estado."
           />
           <Funcionalidade
+            Icone={IconeFamilia}
             titulo="Ficha de saúde e família"
             texto="Crie a conta com o seu BI ou Passaporte e adicione o seu agregado familiar — filhos, cônjuge ou pais à sua responsabilidade."
           />
           <Funcionalidade
+            Icone={IconeSeguro}
             titulo="Cobertura de seguros"
             texto="Veja quais as clínicas e farmácias que aceitam o seu seguro de saúde, e quais atendem sem seguro."
           />
           <Funcionalidade
+            Icone={IconeUrgencia}
             titulo="Urgências 24 horas"
             texto="Identifique rapidamente as unidades com atendimento de urgência permanente perto de si."
           />
           <Funcionalidade
+            Icone={IconeEscudo}
             titulo="Segurança máxima"
             texto="Ligação cifrada, palavras-passe protegidas com Argon2 e tratamento de dados conforme a Lei de Proteção de Dados de Angola."
           />
         </div>
       </section>
 
-      {/* Chamada final */}
-      <section className="rounded-2xl border border-base-line bg-white p-8 text-center shadow-card">
-        <h2 className="text-2xl font-bold">{c.home_cta_titulo}</h2>
-        <p className="mx-auto mt-2 max-w-xl text-gray-600">{c.home_cta_texto}</p>
-        <Link href="/registo" className="btn-primary mt-6">
-          Criar a minha conta
-        </Link>
+      {/* Chamada final — banner */}
+      <section className="relative overflow-hidden rounded-2xl shadow-card">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/img/hero/2.svg"
+          alt=""
+          className="h-full w-full object-cover"
+          loading="lazy"
+        />
+        <div className="absolute inset-0 bg-gradient-to-r from-angola-black/90 via-angola-red/75 to-angola-red/40" />
+        <div className="absolute inset-0 flex flex-col items-center justify-center px-6 py-12 text-center text-white">
+          <h2 className="text-2xl font-extrabold md:text-3xl">{c.home_cta_titulo}</h2>
+          <p className="mx-auto mt-3 max-w-xl text-white/90">{c.home_cta_texto}</p>
+          <Link href="/registo" className="btn-gold mt-6">
+            Criar a minha conta
+          </Link>
+        </div>
       </section>
     </div>
   );
@@ -98,10 +123,20 @@ function Estatistica({ numero, rotulo }: { numero: number; rotulo: string }) {
   );
 }
 
-function Funcionalidade({ titulo, texto }: { titulo: string; texto: string }) {
+function Funcionalidade({
+  Icone,
+  titulo,
+  texto,
+}: {
+  Icone: ComponentType<{ className?: string }>;
+  titulo: string;
+  texto: string;
+}) {
   return (
     <div className="card p-6">
-      <div className="mb-3 h-1.5 w-10 rounded-full bg-angola-gold" />
+      <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-angola-red/10 text-angola-red">
+        <Icone className="h-6 w-6" />
+      </div>
       <h3 className="text-lg font-bold">{titulo}</h3>
       <p className="mt-2 text-sm text-gray-600">{texto}</p>
     </div>

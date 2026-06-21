@@ -7,6 +7,13 @@ import {
   ETIQUETA_ESTADO_MARCACAO,
   COR_ESTADO_MARCACAO,
 } from "@/lib/etiquetas";
+import {
+  IconeUnidade,
+  IconeTexto,
+  IconeUtilizadores,
+  IconeVerificacao,
+} from "@/components/Icones";
+import type { ComponentType } from "react";
 
 export default async function AdminDashboard() {
   const admin = await utenteAtual();
@@ -158,10 +165,10 @@ export default async function AdminDashboard() {
 
       {/* Atalhos de gestão (CMS) */}
       <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <Atalho href="/admin/unidades" titulo="Gerir unidades" texto="Adicionar e editar hospitais, clínicas, centros, farmácias e outros prestadores." />
-        <Atalho href="/admin/conteudo" titulo="Conteúdo do site" texto="Editar os textos das páginas públicas (início, contactos)." />
-        <Atalho href="/admin/utentes" titulo="Gerir utilizadores" texto="Definir níveis de acesso (utente, profissional, admin)." />
-        <Atalho href="/admin/verificacoes" titulo="Verificações" texto="Aprovar ou rejeitar documentos dos utentes." />
+        <Atalho href="/admin/unidades" Icone={IconeUnidade} titulo="Gerir unidades" texto="Adicionar e editar hospitais, clínicas, centros, farmácias e outros prestadores." />
+        <Atalho href="/admin/conteudo" Icone={IconeTexto} titulo="Conteúdo do site" texto="Editar os textos das páginas públicas (início, contactos)." />
+        <Atalho href="/admin/utentes" Icone={IconeUtilizadores} titulo="Gerir utilizadores" texto="Definir níveis de acesso (utente, profissional, admin)." />
+        <Atalho href="/admin/verificacoes" Icone={IconeVerificacao} titulo="Verificações" texto="Aprovar ou rejeitar documentos dos utentes." />
       </section>
     </div>
   );
@@ -191,10 +198,22 @@ function Indicador({
   );
 }
 
-function Atalho({ href, titulo, texto }: { href: string; titulo: string; texto: string }) {
+function Atalho({
+  href,
+  Icone,
+  titulo,
+  texto,
+}: {
+  href: string;
+  Icone: ComponentType<{ className?: string }>;
+  titulo: string;
+  texto: string;
+}) {
   return (
     <Link href={href} className="card block p-5 transition hover:shadow-lg">
-      <div className="mb-2 h-1.5 w-10 rounded-full bg-angola-gold" />
+      <div className="mb-3 flex h-11 w-11 items-center justify-center rounded-xl bg-angola-gold/15 text-angola-gold-dark">
+        <Icone className="h-6 w-6" />
+      </div>
       <p className="font-bold">{titulo}</p>
       <p className="mt-1 text-sm text-gray-500">{texto}</p>
     </Link>
