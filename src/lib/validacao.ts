@@ -137,5 +137,29 @@ export const perfilSchema = z.object({
   municipio: z.string().optional(),
 });
 
+// ── Histórico clínico (registos feitos pelo médico) ─────────────────────────
+export const consultaSchema = z.object({
+  pacienteId: z.string().min(1),
+  unidadeNome: z.string().optional(),
+  motivo: z.string().optional(),
+  diagnostico: z.string().optional(),
+  notas: z.string().max(4000).optional(),
+});
+
+export const exameSchema = z.object({
+  pacienteId: z.string().min(1),
+  nome: z.string().min(2, "Indique o nome do exame."),
+  resultado: z.string().max(4000).optional(),
+  notas: z.string().max(4000).optional(),
+});
+
+export const patologiaSchema = z.object({
+  pacienteId: z.string().min(1),
+  nome: z.string().min(2, "Indique a patologia."),
+  estado: z.enum(["ATIVA", "CRONICA", "RESOLVIDA"]).optional(),
+  desde: z.string().optional(),
+  notas: z.string().max(2000).optional(),
+});
+
 export type RegistoInput = z.infer<typeof registoSchema>;
 export type LoginInput = z.infer<typeof loginSchema>;

@@ -33,6 +33,8 @@ const UTENTES_TESTE: {
   telefone?: string;
   provincia?: string;
   municipio?: string;
+  especialidadeMedica?: string;
+  numeroOrdem?: string;
 }[] = [
   {
     numeroDocumento: "004952656LA049",
@@ -70,7 +72,49 @@ const UTENTES_TESTE: {
     provincia: "Benguela",
     municipio: "Benguela",
   },
+  {
+    numeroDocumento: "005566778LA040",
+    nomeCompleto: "Dr. Manuel Filipe Adão",
+    sexo: "MASCULINO",
+    papel: "PROFISSIONAL",
+    password: "Medico2026",
+    provincia: "Luanda",
+    municipio: "Luanda",
+    especialidadeMedica: "Clínica Geral",
+    numeroOrdem: "OMA-12345",
+  },
 ];
+
+// Histórico clínico de demonstração para um paciente de teste. Permite ao
+// médico de teste ver consultas, exames e patologias ao pesquisar pelo BI.
+const HISTORICO_DEMO = {
+  pacienteDoc: "003456789LA042", // Maria João Teixeira
+  medicoDoc: "005566778LA040", // Dr. Manuel Filipe Adão
+  patologias: [
+    { nome: "Hipertensão arterial", estado: "CRONICA" as const, desde: "2021", notas: "Controlada com medicação." },
+    { nome: "Asma ligeira", estado: "ATIVA" as const, desde: "2018", notas: null },
+    { nome: "Anemia ferropénica", estado: "RESOLVIDA" as const, desde: "2023", notas: "Resolvida após suplementação." },
+  ],
+  consultas: [
+    {
+      unidadeNome: "Clínica Sagrada Esperança",
+      motivo: "Cefaleias e tensão elevada",
+      diagnostico: "Hipertensão arterial descompensada",
+      notas: "Ajustada medicação anti-hipertensora. Reavaliar em 1 mês.",
+    },
+    {
+      unidadeNome: "Centro Médico Girassol",
+      motivo: "Consulta de rotina",
+      diagnostico: "Sem alterações de relevo",
+      notas: "Mantém terapêutica habitual.",
+    },
+  ],
+  exames: [
+    { nome: "Hemograma completo", resultado: "Valores dentro dos parâmetros normais.", notas: null },
+    { nome: "Glicemia em jejum", resultado: "92 mg/dL — normal.", notas: null },
+    { nome: "Eletrocardiograma", resultado: "Ritmo sinusal. Sem sinais de isquemia.", notas: null },
+  ],
+};
 
 // Logótipos fornecidos para o portal. Os ficheiros são servidos localmente,
 // evitando dependências de serviços externos de logótipos.
@@ -190,6 +234,8 @@ async function main() {
         papel: utente.papel,
         nomeCompleto: utente.nomeCompleto,
         passwordHash,
+        especialidadeMedica: utente.especialidadeMedica ?? null,
+        numeroOrdem: utente.numeroOrdem ?? null,
       },
       create: {
         tipoDocumento: "BI",
@@ -201,9 +247,61 @@ async function main() {
         telefone: utente.telefone ?? null,
         provincia: utente.provincia ?? null,
         municipio: utente.municipio ?? null,
+        especialidadeMedica: utente.especialidadeMedica ?? null,
+        numeroOrdem: utente.numeroOrdem ?? null,
         passwordHash,
         fichaSaude: { create: {} },
       },
+    });
+  }
+
+  // Histórico clínico de demonstração (idempotente: recria se já existir).
+  const pacienteDemo = await prisma.utente.findUnique({
+    where: { numeroDocumento: HISTORICO_DEMO.pacienteDoc },
+    select: { id: true },
+  });
+  const medicoDemo = await prisma.utente.findUnique({
+    where: { numeroDocumento: HISTORICO_DEMO.medicoDoc },
+    select: { id: true, nomeCompleto: true },
+  });
+  if (pacienteDemo && medicoDemo) {
+    await prisma.$transaction([
+      prisma.consulta.deleteMany({ where: { pacienteId: pacienteDemo.id } }),
+      prisma.exame.deleteMany({ where: { pacienteId: pacienteDemo.id } }),
+      prisma.patologia.deleteMany({ where: { pacienteId: pacienteDemo.id } }),
+    ]);
+    await prisma.patologia.createMany({
+      data: HISTORICO_DEMO.patologias.map((p) => ({
+        pacienteId: pacienteDemo.id,
+        profissionalId: medicoDemo.id,
+        nome: p.nome,
+        estado: p.estado,
+        desde: p.desde,
+        notas: p.notas,
+      })),
+    });
+    await prisma.consulta.createMany({
+      data: HISTORICO_DEMO.consultas.map((c, i) => ({
+        pacienteId: pacienteDemo.id,
+        profissionalId: medicoDemo.id,
+        profissionalNome: medicoDemo.nomeCompleto,
+        unidadeNome: c.unidadeNome,
+        motivo: c.motivo,
+        diagnostico: c.diagnostico,
+        notas: c.notas,
+        data: new Date(Date.now() - (i + 1) * 1000 * 60 * 60 * 24 * 45),
+      })),
+    });
+    await prisma.exame.createMany({
+      data: HISTORICO_DEMO.exames.map((e, i) => ({
+        pacienteId: pacienteDemo.id,
+        profissionalId: medicoDemo.id,
+        profissionalNome: medicoDemo.nomeCompleto,
+        nome: e.nome,
+        resultado: e.resultado,
+        notas: e.notas,
+        data: new Date(Date.now() - (i + 1) * 1000 * 60 * 60 * 24 * 30),
+      })),
     });
   }
 

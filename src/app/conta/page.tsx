@@ -87,6 +87,38 @@ export default async function ContaPage() {
         )}
       </Link>
 
+      {/* Histórico clínico */}
+      <Link
+        href="/conta/historico"
+        className="card flex items-center justify-between p-5 transition hover:shadow-lg"
+      >
+        <div>
+          <h2 className="font-bold">Histórico clínico</h2>
+          <p className="text-sm text-gray-500">
+            Consulte os resultados dos seus exames, as suas consultas e
+            patologias. Informação privada, visível apenas a si e aos
+            profissionais de saúde.
+          </p>
+        </div>
+        <span className="badge bg-angola-red/10 text-angola-red-dark">Ver →</span>
+      </Link>
+
+      {(utente.papel === "PROFISSIONAL" || utente.papel === "ADMIN") && (
+        <Link
+          href="/medico"
+          className="card flex items-center justify-between p-5 transition hover:shadow-lg"
+        >
+          <div>
+            <h2 className="font-bold">Portal do Médico</h2>
+            <p className="text-sm text-gray-500">
+              Pesquise um paciente por BI ou NIF para consultar e registar o
+              respetivo histórico clínico.
+            </p>
+          </div>
+          <span className="badge bg-angola-black/10 text-angola-black">Aceder →</span>
+        </Link>
+      )}
+
       <div className="grid gap-8 lg:grid-cols-2">
         {/* Ficha de saúde */}
         <section className="card p-6">

@@ -78,6 +78,19 @@ model Utente {
   verificacoes   Verificacao[] @relation("VerificacoesDoUtente")
   verificacoesRevistas Verificacao[] @relation("VerificacoesRevistas")
 
+  // Histórico clínico (como paciente)
+  consultas      Consulta[]    @relation("ConsultasDoPaciente")
+  exames         Exame[]       @relation("ExamesDoPaciente")
+  patologias     Patologia[]   @relation("PatologiasDoPaciente")
+  // Registos que este profissional criou (médico)
+  registosConsulta Consulta[]  @relation("ConsultasDoProfissional")
+  registosExame    Exame[]     @relation("ExamesDoProfissional")
+  registosPatologia Patologia[] @relation("PatologiasDoProfissional")
+
+  // Perfil profissional (médicos)
+  especialidadeMedica String?
+  numeroOrdem         String?
+
   criadoEm       DateTime      @default(now())
   atualizadoEm   DateTime      @updatedAt
 
@@ -397,4 +410,63 @@ model VerificacaoEvento {
   criadoEm       DateTime    @default(now())
 
   @@index([verificacaoId])
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// HISTÓRICO CLÍNICO (acesso: paciente + profissional)
+// ─────────────────────────────────────────────────────────────────────────────
+
+enum EstadoPatologia {
+  ATIVA
+  CRONICA
+  RESOLVIDA
+}
+
+model Consulta {
+  id             String   @id @default(cuid())
+  pacienteId     String
+  paciente       Utente   @relation("ConsultasDoPaciente", fields: [pacienteId], references: [id], onDelete: Cascade)
+  profissionalId String?
+  profissional   Utente?  @relation("ConsultasDoProfissional", fields: [profissionalId], references: [id])
+  profissionalNome String?
+  unidadeNome    String?
+  data           DateTime @default(now())
+  motivo         String?
+  diagnostico    String?
+  notas          String?
+  criadoEm       DateTime @default(now())
+
+  @@index([pacienteId])
+}
+
+model Exame {
+  id             String   @id @default(cuid())
+  pacienteId     String
+  paciente       Utente   @relation("ExamesDoPaciente", fields: [pacienteId], references: [id], onDelete: Cascade)
+  profissionalId String?
+  profissional   Utente?  @relation("ExamesDoProfissional", fields: [profissionalId], references: [id])
+  profissionalNome String?
+  nome           String
+  data           DateTime @default(now())
+  resultado      String?
+  notas          String?
+  ficheiroKey    String?  // anexo cifrado (PDF/imagem do resultado)
+  criadoEm       DateTime @default(now())
+
+  @@index([pacienteId])
+}
+
+model Patologia {
+  id             String          @id @default(cuid())
+  pacienteId     String
+  paciente       Utente          @relation("PatologiasDoPaciente", fields: [pacienteId], references: [id], onDelete: Cascade)
+  profissionalId String?
+  profissional   Utente?         @relation("PatologiasDoProfissional", fields: [profissionalId], references: [id])
+  nome           String
+  estado         EstadoPatologia @default(ATIVA)
+  desde          String?
+  notas          String?
+  criadoEm       DateTime        @default(now())
+
+  @@index([pacienteId])
 }

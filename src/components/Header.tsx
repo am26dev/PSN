@@ -18,10 +18,12 @@ export function Header({
   autenticado,
   nome,
   admin,
+  profissional,
 }: {
   autenticado: boolean;
   nome: string | null;
   admin?: boolean;
+  profissional?: boolean;
 }) {
   const [aberto, setAberto] = useState(false);
 
@@ -43,6 +45,7 @@ export function Header({
         <div className="hidden items-center gap-2 lg:flex">
           {autenticado ? (
             <>
+              {profissional && <Link href="/medico" className="btn-ghost py-2">Portal do Médico</Link>}
               {admin && <Link href="/admin" className="btn-ghost py-2">Admin</Link>}
               <Link href="/conta" className="btn-ghost py-2">{nome?.split(" ")[0] ?? "Conta"}</Link>
               <form action="/api/auth/logout" method="post">
@@ -85,6 +88,7 @@ export function Header({
             <div className="flex flex-wrap gap-2 py-3">
               {autenticado ? (
                 <>
+                  {profissional && <Link href="/medico" onClick={() => setAberto(false)} className="btn-ghost py-2">Portal do Médico</Link>}
                   {admin && <Link href="/admin" onClick={() => setAberto(false)} className="btn-ghost py-2">Admin</Link>}
                   <Link href="/conta" onClick={() => setAberto(false)} className="btn-ghost py-2">A minha conta</Link>
                   <form action="/api/auth/logout" method="post">
