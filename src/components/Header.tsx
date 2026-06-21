@@ -33,7 +33,7 @@ export function Header({
           {autenticado ? (
             <>
               {admin && (
-                <Link href="/admin/verificacoes" className="btn-ghost py-2">
+                <Link href="/admin" className="btn-ghost py-2">
                   Admin
                 </Link>
               )}
