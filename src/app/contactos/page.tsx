@@ -1,20 +1,21 @@
+import { obterConteudos } from "@/lib/conteudo";
+
 export const metadata = { title: "Contactos — PSN" };
 
-export default function ContactosPage() {
+export default async function ContactosPage() {
+  const c = await obterConteudos();
   return (
     <div className="mx-auto max-w-3xl space-y-8">
       <div>
         <h1 className="text-3xl font-bold">Contactos</h1>
-        <p className="mt-2 text-gray-600">
-          Estamos disponíveis para o ajudar a usar o Portal de Saúde Nacional.
-        </p>
+        <p className="mt-2 text-gray-600">{c.contactos_intro}</p>
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2">
-        <Cartao titulo="Apoio ao Utente" linhas={["apoio@psn.ao", "+244 900 000 000", "Seg-Sex, 08h-18h"]} />
-        <Cartao titulo="Unidades e parcerias" linhas={["parcerias@psn.ao", "Adesão de hospitais, clínicas e farmácias"]} />
-        <Cartao titulo="Imprensa" linhas={["comunicacao@psn.ao"]} />
-        <Cartao titulo="Sede" linhas={["Luanda, Angola"]} />
+        <Cartao titulo="Apoio ao Utente" linhas={[c.contactos_apoio_email, c.contactos_apoio_telefone, c.contactos_apoio_horario]} />
+        <Cartao titulo="Unidades e parcerias" linhas={[c.contactos_parcerias_email, "Adesão de hospitais, clínicas e farmácias"]} />
+        <Cartao titulo="Imprensa" linhas={[c.contactos_imprensa_email]} />
+        <Cartao titulo="Sede" linhas={[c.contactos_sede]} />
       </div>
 
       <div className="card p-6">

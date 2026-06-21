@@ -470,3 +470,14 @@ model Patologia {
 
   @@index([pacienteId])
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// CONTEÚDO EDITÁVEL DO SITE (CMS) — textos geridos pela administração
+// ─────────────────────────────────────────────────────────────────────────────
+
+model ConteudoSite {
+  chave        String   @id // identificador do campo (ex.: home_cta_titulo)
+  valor        String
+  atualizadoEm DateTime @updatedAt
+  criadoEm     DateTime @default(now())
+}

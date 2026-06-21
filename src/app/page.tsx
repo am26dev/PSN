@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { Hero } from "@/components/Hero";
 import { SLIDES_HERO } from "@/lib/imagens";
 import { LogoSeguradora } from "@/components/LogoSeguradora";
+import { obterConteudos } from "@/lib/conteudo";
 
 export default async function HomePage() {
   const [hospitais, prestadores, farmacias] = await Promise.all([
@@ -16,6 +17,8 @@ export default async function HomePage() {
   const seguradoras = await prisma.seguradora
     .findMany({ where: { ativo: true }, orderBy: { nome: "asc" } })
     .catch(() => []);
+
+  const c = await obterConteudos();
 
   return (
     <div className="space-y-16">
@@ -45,7 +48,7 @@ export default async function HomePage() {
 
       {/* Funcionalidades */}
       <section>
-        <h2 className="text-2xl font-bold">Tudo o que precisa, num só lugar</h2>
+        <h2 className="text-2xl font-bold">{c.home_funcionalidades_titulo}</h2>
         <div className="mt-6 grid gap-4 md:grid-cols-3">
           <Funcionalidade
             titulo="Rede nacional"
@@ -76,11 +79,8 @@ export default async function HomePage() {
 
       {/* Chamada final */}
       <section className="rounded-2xl border border-base-line bg-white p-8 text-center shadow-card">
-        <h2 className="text-2xl font-bold">Pronto para começar?</h2>
-        <p className="mx-auto mt-2 max-w-xl text-gray-600">
-          Crie a sua conta de Utente em minutos. Os cidadãos angolanos usam o
-          Bilhete de Identidade; os cidadãos estrangeiros usam o Passaporte.
-        </p>
+        <h2 className="text-2xl font-bold">{c.home_cta_titulo}</h2>
+        <p className="mx-auto mt-2 max-w-xl text-gray-600">{c.home_cta_texto}</p>
         <Link href="/registo" className="btn-primary mt-6">
           Criar a minha conta
         </Link>
