@@ -29,7 +29,7 @@ export function Hero({ slides }: { slides: SlideHero[] }) {
               fallback="/img/hero/1.webp"
               alt={s.titulo}
               className="h-full w-full object-cover"
-              loading={idx === 0 ? "eager" : "lazy"}
+              loading="eager"
               fetchPriority={idx === 0 ? "high" : "auto"}
             />
             <div className="absolute inset-0 bg-gradient-to-r from-angola-black/95 via-angola-black/65 to-angola-red/20" />
