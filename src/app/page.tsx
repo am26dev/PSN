@@ -13,6 +13,7 @@ import {
   IconeEscudo,
 } from "@/components/Icones";
 import type { ComponentType } from "react";
+import { ImagemSegura } from "@/components/ImagemSegura";
 
 export default async function HomePage() {
   const [hospitais, prestadores, farmacias] = await Promise.all([
@@ -30,20 +31,21 @@ export default async function HomePage() {
   const c = await obterConteudos();
 
   return (
-    <div className="space-y-16">
+    <div>
       {/* Hero com 4 slides */}
       <Hero slides={SLIDES_HERO} />
 
-      {/* Estatísticas da rede */}
-      <section className="grid grid-cols-3 gap-4">
-        <Estatistica numero={hospitais} rotulo="Hospitais públicos" />
-        <Estatistica numero={prestadores} rotulo="Clínicas e prestadores" />
-        <Estatistica numero={farmacias} rotulo="Farmácias" />
-      </section>
+      <div className="relative z-10 -mt-20 space-y-16 pb-4">
+        {/* Estatísticas da rede */}
+        <section className="grid gap-4 px-2 sm:grid-cols-3 md:gap-5">
+          <Estatistica numero={hospitais} rotulo="Hospitais públicos" />
+          <Estatistica numero={prestadores} rotulo="Clínicas e prestadores" />
+          <Estatistica numero={farmacias} rotulo="Farmácias" />
+        </section>
 
       {/* Seguradoras parceiras */}
-      {seguradoras.length > 0 && (
-        <section>
+        {seguradoras.length > 0 && (
+          <section>
           <h2 className="text-center text-sm font-semibold uppercase tracking-wide text-gray-400">
             Seguradoras e redes de saúde
           </h2>
@@ -52,13 +54,16 @@ export default async function HomePage() {
               <LogoSeguradora key={s.id} nome={s.nome} logoUrl={s.logoUrl} />
             ))}
           </div>
-        </section>
-      )}
+          </section>
+        )}
 
       {/* Funcionalidades */}
-      <section>
-        <h2 className="text-2xl font-bold">{c.home_funcionalidades_titulo}</h2>
-        <div className="mt-6 grid gap-4 md:grid-cols-3">
+        <section>
+          <div className="max-w-2xl">
+            <span className="text-sm font-bold uppercase tracking-[0.2em] text-angola-red">Portal nacional</span>
+            <h2 className="mt-2 text-3xl font-extrabold">{c.home_funcionalidades_titulo}</h2>
+          </div>
+          <div className="mt-7 grid gap-4 md:grid-cols-3">
           <Funcionalidade
             Icone={IconeRede}
             titulo="Rede nacional"
@@ -89,19 +94,19 @@ export default async function HomePage() {
             titulo="Segurança máxima"
             texto="Ligação cifrada, palavras-passe protegidas com Argon2 e tratamento de dados conforme a Lei de Proteção de Dados de Angola."
           />
-        </div>
-      </section>
+          </div>
+        </section>
 
       {/* Chamada final — banner */}
-      <section className="relative overflow-hidden rounded-2xl shadow-card">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src="/img/hero/2.svg"
-          alt=""
-          className="h-full w-full object-cover"
+        <section className="relative min-h-[360px] overflow-hidden rounded-3xl shadow-2xl">
+          <ImagemSegura
+          src="/img/hero/2.webp"
+          fallback="/img/hero/1.webp"
+          alt="Consulta médica apoiada por tecnologia"
+          className="absolute inset-0 h-full w-full object-cover"
           loading="lazy"
         />
-        <div className="absolute inset-0 bg-gradient-to-r from-angola-black/90 via-angola-red/75 to-angola-red/40" />
+        <div className="absolute inset-0 bg-gradient-to-r from-angola-black/95 via-angola-red/75 to-angola-red/20" />
         <div className="absolute inset-0 flex flex-col items-center justify-center px-6 py-12 text-center text-white">
           <h2 className="text-2xl font-extrabold md:text-3xl">{c.home_cta_titulo}</h2>
           <p className="mx-auto mt-3 max-w-xl text-white/90">{c.home_cta_texto}</p>
@@ -109,16 +114,18 @@ export default async function HomePage() {
             Criar a minha conta
           </Link>
         </div>
-      </section>
+        </section>
+      </div>
     </div>
   );
 }
 
 function Estatistica({ numero, rotulo }: { numero: number; rotulo: string }) {
   return (
-    <div className="card p-5 text-center">
-      <p className="text-3xl font-extrabold text-angola-red">{numero}</p>
-      <p className="mt-1 text-xs text-gray-500">{rotulo}</p>
+    <div className="relative overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-br from-angola-black via-[#5f2035] to-angola-red p-6 text-center text-white shadow-2xl sm:p-8">
+      <div className="absolute -right-8 -top-10 h-28 w-28 rounded-full bg-white/10 blur-2xl" />
+      <p className="relative text-4xl font-extrabold text-angola-gold md:text-5xl">{numero}</p>
+      <p className="relative mt-2 text-sm font-medium text-white/85">{rotulo}</p>
     </div>
   );
 }
@@ -133,7 +140,7 @@ function Funcionalidade({
   texto: string;
 }) {
   return (
-    <div className="card p-6">
+    <div className="group rounded-2xl border border-base-line bg-gradient-to-br from-white via-white to-angola-red/[0.04] p-6 shadow-card transition duration-300 hover:-translate-y-1 hover:border-angola-red/20 hover:shadow-lg">
       <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-angola-red/10 text-angola-red">
         <Icone className="h-6 w-6" />
       </div>

@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import type { SlideHero } from "@/lib/imagens";
+import { ImagemSegura } from "@/components/ImagemSegura";
 
 export function Hero({ slides }: { slides: SlideHero[] }) {
   const [i, setI] = useState(0);
@@ -13,8 +14,8 @@ export function Hero({ slides }: { slides: SlideHero[] }) {
   }, [slides.length]);
 
   return (
-    <section className="relative overflow-hidden rounded-2xl shadow-card">
-      <div className="relative h-[420px] w-full md:h-[460px]">
+    <section className="full-bleed relative -mt-8 overflow-hidden bg-angola-black shadow-2xl">
+      <div className="relative h-[calc(100svh-4rem)] min-h-[580px] max-h-[860px] w-full">
         {slides.map((s, idx) => (
           <div
             key={idx}
@@ -23,25 +24,27 @@ export function Hero({ slides }: { slides: SlideHero[] }) {
             }`}
             aria-hidden={idx !== i}
           >
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
+            <ImagemSegura
               src={s.imagem}
-              alt=""
+              fallback="/img/hero/1.webp"
+              alt={s.titulo}
               className="h-full w-full object-cover"
               loading={idx === 0 ? "eager" : "lazy"}
+              fetchPriority={idx === 0 ? "high" : "auto"}
             />
-            <div className="absolute inset-0 bg-gradient-to-r from-angola-black/85 via-angola-red/70 to-angola-red/30" />
+            <div className="absolute inset-0 bg-gradient-to-r from-angola-black/95 via-angola-black/65 to-angola-red/20" />
+            <div className="absolute inset-0 bg-gradient-to-t from-angola-black/50 via-transparent to-transparent" />
             <div className="absolute inset-0 flex items-center">
               <div className="mx-auto w-full max-w-6xl px-6 md:px-12">
-                <div className="max-w-xl text-white">
+                <div className="max-w-2xl text-white">
                   <span className="badge bg-angola-gold text-angola-black">
                     República de Angola
                   </span>
-                  <h1 className="mt-4 text-3xl font-extrabold leading-tight md:text-4xl">
+                  <h1 className="mt-5 text-4xl font-extrabold leading-[1.08] drop-shadow md:text-6xl">
                     {s.titulo}
                   </h1>
-                  <p className="mt-3 text-white/90">{s.texto}</p>
-                  <Link href={s.cta.href} className="btn-gold mt-6">
+                  <p className="mt-5 max-w-xl text-base leading-7 text-white/90 md:text-lg">{s.texto}</p>
+                  <Link href={s.cta.href} className="btn-gold mt-8">
                     {s.cta.texto}
                   </Link>
                 </div>
@@ -52,14 +55,14 @@ export function Hero({ slides }: { slides: SlideHero[] }) {
       </div>
 
       {/* Indicadores */}
-      <div className="absolute bottom-4 left-1/2 flex -translate-x-1/2 gap-2">
+      <div className="absolute bottom-8 left-1/2 flex -translate-x-1/2 gap-2">
         {slides.map((_, idx) => (
           <button
             key={idx}
             onClick={() => setI(idx)}
             aria-label={`Slide ${idx + 1}`}
-            className={`h-2 rounded-full transition-all ${
-              idx === i ? "w-6 bg-angola-gold" : "w-2 bg-white/60"
+            className={`h-2.5 rounded-full transition-all ${
+              idx === i ? "w-8 bg-angola-gold" : "w-2.5 bg-white/60"
             }`}
           />
         ))}

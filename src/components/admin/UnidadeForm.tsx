@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { PROVINCIAS_ANGOLA } from "@/lib/validacao";
 
 interface Valores {
@@ -28,6 +29,8 @@ export function UnidadeForm({
 }) {
   const router = useRouter();
   const [erro, setErro] = useState<string | null>(null);
+  const [ok, setOk] = useState(false);
+  const [alterado, setAlterado] = useState(false);
   const [ocupado, setOcupado] = useState(false);
   const [v, setV] = useState<Valores>({
     nome: inicial?.nome ?? "",
@@ -46,21 +49,33 @@ export function UnidadeForm({
 
   function set<K extends keyof Valores>(k: K, val: Valores[K]) {
     setV((s) => ({ ...s, [k]: val }));
+    setAlterado(true);
+    setOk(false);
   }
 
   async function carregarImagem(campo: "logoUrl" | "bannerUrl", ficheiro: File) {
     setErro(null);
+    if (!["image/jpeg", "image/png", "image/webp", "image/svg+xml"].includes(ficheiro.type)) {
+      setErro("Use uma imagem JPEG, PNG, WebP ou SVG.");
+      return;
+    }
+    if (ficheiro.size > 5 * 1024 * 1024) {
+      setErro("A imagem excede o limite de 5 MB.");
+      return;
+    }
     setOcupado(true);
     try {
       const fd = new FormData();
       fd.append("ficheiro", ficheiro);
       const res = await fetch("/api/admin/ficheiros", { method: "POST", body: fd });
-      const data = await res.json();
+      const data = await res.json().catch(() => ({}));
       if (!res.ok) {
         setErro(data.erro ?? "Não foi possível carregar a imagem.");
         return;
       }
       set(campo, data.url);
+    } catch {
+      setErro("Erro de ligação durante o carregamento da imagem.");
     } finally {
       setOcupado(false);
     }
@@ -69,6 +84,7 @@ export function UnidadeForm({
   async function guardar(e: React.FormEvent) {
     e.preventDefault();
     setErro(null);
+    setOk(false);
     setOcupado(true);
     try {
       const url = id ? `/api/admin/unidades/${id}` : "/api/admin/unidades";
@@ -77,13 +93,19 @@ export function UnidadeForm({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(v),
       });
-      const data = await res.json();
+      const data = await res.json().catch(() => ({}));
       if (!res.ok) {
         setErro(data.erro ?? "Não foi possível guardar.");
         return;
       }
-      router.push("/admin/unidades");
+      setAlterado(false);
+      setOk(true);
+      if (!id && data.id) {
+        router.replace(`/admin/unidades/${data.id}/editar?criada=1`);
+      }
       router.refresh();
+    } catch {
+      setErro("Erro de ligação. Confirme a internet e tente novamente.");
     } finally {
       setOcupado(false);
     }
@@ -176,11 +198,18 @@ export function UnidadeForm({
         </label>
       </div>
 
-      {erro && <p className="rounded-lg bg-angola-red/10 px-4 py-3 text-sm text-angola-red-dark">{erro}</p>}
+      {erro && <p role="alert" className="rounded-lg bg-angola-red/10 px-4 py-3 text-sm text-angola-red-dark">{erro}</p>}
+      {ok && <p role="status" className="rounded-lg bg-green-50 px-4 py-3 text-sm font-medium text-green-700">Unidade guardada com sucesso.</p>}
 
-      <button type="submit" disabled={ocupado} className="btn-primary w-full">
-        {ocupado ? "A guardar…" : id ? "Guardar alterações" : "Criar unidade"}
-      </button>
+      <div className="sticky bottom-3 z-20 -mx-2 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-base-line bg-white/95 p-3 shadow-xl backdrop-blur">
+        <span className="px-2 text-xs text-gray-500">{alterado ? "Alterações por guardar" : id ? "Tudo guardado" : "Preencha os dados obrigatórios"}</span>
+        <div className="flex gap-2">
+          <Link href="/admin/unidades" className="btn-ghost">Voltar à lista</Link>
+          <button type="submit" disabled={ocupado || (!!id && !alterado)} className="btn-primary">
+            {ocupado ? "A guardar…" : id ? "Guardar alterações" : "Criar unidade"}
+          </button>
+        </div>
+      </div>
     </form>
   );
 }
@@ -210,6 +239,7 @@ function CampoImagem({
             src={valor}
             alt=""
             className={`${previewClasse} max-w-[160px] border border-base-line object-cover`}
+            onError={(e) => { e.currentTarget.src = "/img/u/clinica.webp"; }}
           />
         ) : (
           <div className={`${previewClasse} max-w-[160px] bg-base-muted`} />
@@ -225,6 +255,7 @@ function CampoImagem({
               onChange={(e) => {
                 const f = e.target.files?.[0];
                 if (f) onFicheiro(f);
+                e.currentTarget.value = "";
               }}
             />
           </label>

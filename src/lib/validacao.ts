@@ -115,8 +115,14 @@ export const unidadeSchema = z.object({
   telefone: z.string().optional(),
   horario: z.string().optional(),
   urgencia24h: z.boolean().optional(),
-  logoUrl: z.string().url("URL inválido.").optional().or(z.literal("")),
-  bannerUrl: z.string().url("URL inválido.").optional().or(z.literal("")),
+  logoUrl: z.string().max(2048).refine(
+    (v) => v === "" || v.startsWith("/") || /^https?:\/\//i.test(v),
+    "URL inválido.",
+  ).optional(),
+  bannerUrl: z.string().max(2048).refine(
+    (v) => v === "" || v.startsWith("/") || /^https?:\/\//i.test(v),
+    "URL inválido.",
+  ).optional(),
   descricao: z.string().max(2000).optional(),
   ativo: z.boolean().optional(),
 });

@@ -16,6 +16,7 @@ export function ConteudoForm({
   const [erro, setErro] = useState<string | null>(null);
   const [ok, setOk] = useState(false);
   const [ocupado, setOcupado] = useState(false);
+  const [alterado, setAlterado] = useState(false);
 
   // Agrupa os campos por secção para uma edição mais legível.
   const grupos = campos.reduce<Record<string, CampoConteudo[]>>((acc, c) => {
@@ -40,6 +41,7 @@ export function ConteudoForm({
         return;
       }
       setOk(true);
+      setAlterado(false);
       router.refresh();
     } catch {
       setErro("Erro de ligação. Tente novamente.");
@@ -63,14 +65,22 @@ export function ConteudoForm({
                   id={c.chave}
                   className="input min-h-[90px]"
                   value={v[c.chave] ?? ""}
-                  onChange={(e) => setV((s) => ({ ...s, [c.chave]: e.target.value }))}
+                  onChange={(e) => {
+                    setV((s) => ({ ...s, [c.chave]: e.target.value }));
+                    setAlterado(true);
+                    setOk(false);
+                  }}
                 />
               ) : (
                 <input
                   id={c.chave}
                   className="input"
                   value={v[c.chave] ?? ""}
-                  onChange={(e) => setV((s) => ({ ...s, [c.chave]: e.target.value }))}
+                  onChange={(e) => {
+                    setV((s) => ({ ...s, [c.chave]: e.target.value }));
+                    setAlterado(true);
+                    setOk(false);
+                  }}
                 />
               )}
             </div>
@@ -87,9 +97,12 @@ export function ConteudoForm({
         </p>
       )}
 
-      <button type="submit" disabled={ocupado} className="btn-primary">
-        {ocupado ? "A guardar…" : "Guardar alterações"}
-      </button>
+      <div className="sticky bottom-3 z-20 flex items-center justify-between gap-3 rounded-2xl border border-base-line bg-white/95 p-3 shadow-xl backdrop-blur">
+        <span className="px-2 text-xs text-gray-500">{alterado ? "Alterações por publicar" : "Conteúdo sincronizado"}</span>
+        <button type="submit" disabled={ocupado || !alterado} className="btn-primary">
+          {ocupado ? "A guardar…" : "Guardar e publicar"}
+        </button>
+      </div>
     </form>
   );
 }

@@ -3,8 +3,9 @@ import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { utenteAtual } from "@/lib/auth";
 import { ETIQUETA_TIPO_UNIDADE } from "@/lib/etiquetas";
-import { fotoUnidade, bannerUnidade } from "@/lib/imagens";
+import { fotoUnidade, bannerUnidade, imagemPadraoUnidade } from "@/lib/imagens";
 import { LogoSeguradora } from "@/components/LogoSeguradora";
+import { ImagemSegura } from "@/components/ImagemSegura";
 
 export default async function UnidadePage({
   params,
@@ -68,9 +69,9 @@ export default async function UnidadePage({
       {/* Banner + identidade */}
       <div className="card overflow-hidden">
         <div className="relative h-56 w-full md:h-64">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
+          <ImagemSegura
             src={bannerUnidade(unidade.tipo, unidade.id, unidade.bannerUrl)}
+            fallback={imagemPadraoUnidade(unidade.tipo)}
             alt={unidade.nome}
             className="h-full w-full object-cover"
           />
@@ -82,9 +83,9 @@ export default async function UnidadePage({
           )}
           <div className="absolute bottom-4 left-4 flex items-end gap-4 md:left-6">
             <div className="h-20 w-20 overflow-hidden rounded-2xl border-4 border-white bg-white shadow-card">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
+              <ImagemSegura
                 src={fotoUnidade(unidade.tipo, unidade.id, unidade.logoUrl)}
+                fallback={imagemPadraoUnidade(unidade.tipo)}
                 alt=""
                 className="h-full w-full object-cover"
               />

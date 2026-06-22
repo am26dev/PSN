@@ -1,15 +1,16 @@
 import Link from "next/link";
+import { ImagemSegura } from "@/components/ImagemSegura";
 
 export default function SobrePage() {
   return (
     <div className="space-y-12">
       {/* Banner */}
-      <section className="relative overflow-hidden rounded-2xl shadow-card">
-        <div className="relative h-72 w-full">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src="https://picsum.photos/seed/psn-sobre-banner/1600/600"
-            alt=""
+      <section className="full-bleed relative -mt-8 overflow-hidden shadow-2xl">
+        <div className="relative h-[500px] w-full">
+          <ImagemSegura
+            src="/img/about/equipa.webp"
+            fallback="/img/hero/1.webp"
+            alt="Equipa de saúde a atender utentes"
             className="h-full w-full object-cover"
           />
           <div className="absolute inset-0 bg-gradient-to-r from-angola-black/85 via-angola-red/75 to-angola-red/40" />
@@ -44,10 +45,10 @@ export default function SobrePage() {
           <Link href="/registo" className="btn-primary mt-6">Criar a minha conta</Link>
         </div>
         <div className="overflow-hidden rounded-2xl shadow-card">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src="https://picsum.photos/seed/psn-sobre-utentes/900/600"
-            alt=""
+          <ImagemSegura
+            src="/img/about/utentes.webp"
+            fallback="/img/u/clinica.webp"
+            alt="Utentes angolanos numa consulta"
             className="h-72 w-full object-cover"
           />
         </div>
@@ -57,10 +58,10 @@ export default function SobrePage() {
       <section>
         <h2 className="text-2xl font-bold">Os nossos pilares</h2>
         <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          <Pilar titulo="Acesso" texto="Encontre unidades de saúde perto de si, em todas as províncias." />
-          <Pilar titulo="Saúde" texto="Cuidado e confiança para todos os cidadãos." />
-          <Pilar titulo="Conectividade" texto="Tecnologia ao serviço da saúde, simples e rápida." />
-          <Pilar titulo="Confiança" texto="Segurança e proteção de dados ao abrigo da Lei n.º 22/11." />
+          <Pilar icone="/pilares/acesso.png" titulo="Acesso" texto="Encontre unidades de saúde perto de si, em todas as províncias." />
+          <Pilar icone="/pilares/saude-coracao.png" titulo="Saúde" texto="Cuidado e confiança para todos os cidadãos." />
+          <Pilar icone="/pilares/conectividade-1.png" titulo="Conectividade" texto="Tecnologia ao serviço da saúde, simples e rápida." />
+          <Pilar icone="/pilares/confianca.png" titulo="Confiança" texto="Segurança e proteção de dados ao abrigo da Lei n.º 22/11." />
         </div>
       </section>
 
@@ -87,10 +88,12 @@ function Item({ texto }: { texto: string }) {
   );
 }
 
-function Pilar({ titulo, texto }: { titulo: string; texto: string }) {
+function Pilar({ icone, titulo, texto }: { icone: string; titulo: string; texto: string }) {
   return (
-    <div className="card p-6">
-      <div className="mb-3 h-1.5 w-10 rounded-full bg-angola-gold" />
+    <div className="group rounded-2xl border border-base-line bg-gradient-to-br from-white via-white to-angola-gold/[0.08] p-6 shadow-card transition hover:-translate-y-1 hover:shadow-lg">
+      <div className="mb-4 flex h-16 w-16 items-center justify-center overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-base-line">
+        <ImagemSegura src={icone} fallback="/pilares/utente.png" alt="" className="h-14 w-14 object-contain" />
+      </div>
       <h3 className="text-lg font-bold">{titulo}</h3>
       <p className="mt-2 text-sm text-gray-600">{texto}</p>
     </div>

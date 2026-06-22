@@ -5,7 +5,8 @@ import { utenteAtual } from "@/lib/auth";
 import { MarcacaoForm } from "@/components/MarcacaoForm";
 import { precoConsulta } from "@/lib/precos";
 import { ETIQUETA_TIPO_UNIDADE } from "@/lib/etiquetas";
-import { bannerUnidade } from "@/lib/imagens";
+import { bannerUnidade, imagemPadraoUnidade } from "@/lib/imagens";
+import { ImagemSegura } from "@/components/ImagemSegura";
 
 export default async function MarcarPage({
   params,
@@ -49,9 +50,9 @@ export default async function MarcarPage({
 
       {/* Banner da unidade */}
       <div className="relative h-40 w-full overflow-hidden rounded-2xl shadow-card">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
+        <ImagemSegura
           src={bannerUnidade(unidade.tipo, unidade.id, unidade.bannerUrl)}
+          fallback={imagemPadraoUnidade(unidade.tipo)}
           alt={unidade.nome}
           className="h-full w-full object-cover"
         />

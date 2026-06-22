@@ -1,8 +1,9 @@
 import Link from "next/link";
 import type { TipoUnidade } from "@prisma/client";
 import { ETIQUETA_TIPO_UNIDADE } from "@/lib/etiquetas";
-import { fotoUnidade } from "@/lib/imagens";
+import { fotoUnidade, imagemPadraoUnidade } from "@/lib/imagens";
 import { LogoSeguradora } from "@/components/LogoSeguradora";
+import { ImagemSegura } from "@/components/ImagemSegura";
 
 const COR_TIPO: Record<TipoUnidade, string> = {
   HOSPITAL_PUBLICO: "bg-angola-red/10 text-angola-red-dark",
@@ -41,9 +42,9 @@ export function UnidadeCard({
       className="card group block overflow-hidden transition hover:shadow-lg"
     >
       <div className="relative h-36 w-full overflow-hidden bg-base-muted">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
+        <ImagemSegura
           src={fotoUnidade(unidade.tipo, unidade.id, unidade.logoUrl)}
+          fallback={imagemPadraoUnidade(unidade.tipo)}
           alt={unidade.nome}
           loading="lazy"
           className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
