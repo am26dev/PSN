@@ -1,0 +1,303 @@
+import Link from "next/link";
+import { notFound } from "next/navigation";
+import { prisma } from "@/lib/prisma";
+import { utenteAtual } from "@/lib/auth";
+import { ETIQUETA_TIPO_UNIDADE } from "@/lib/etiquetas";
+import { fotoUnidade, bannerUnidade, imagemPadraoUnidade } from "@/lib/imagens";
+import { LogoSeguradora } from "@/components/LogoSeguradora";
+import { ImagemSegura } from "@/components/ImagemSegura";
+
+export default async function UnidadePage({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
+  const { id } = await params;
+
+  const unidade = await prisma.unidade.findUnique({
+    where: { id },
+    include: {
+      especialidades: { include: { especialidade: true } },
+      medicos: { include: { especialidade: true }, orderBy: { nome: "asc" } },
+      seguradoras: {
+        where: { seguradora: { ativo: true } },
+        include: { seguradora: true },
+      },
+    },
+  });
+
+  if (!unidade || !unidade.ativo) notFound();
+
+  const eFarmacia = unidade.tipo === "FARMACIA";
+  const eHospitalPublico = unidade.tipo === "HOSPITAL_PUBLICO";
+  const fontes = (unidade.fonteUrl ?? "")
+    .split("|")
+    .map((fonte) => fonte.trim())
+    .filter((fonte) => fonte.startsWith("http://") || fonte.startsWith("https://"));
+
+  // Marcação ativa do utente nesta unidade (para oferecer "Remarcar").
+  const utente = await utenteAtual();
+  const marcacaoAtiva = utente
+    ? await prisma.marcacao.findFirst({
+        where: {
+          utenteId: utente.id,
+          unidadeId: unidade.id,
+          estado: { in: ["PENDENTE", "CONFIRMADA"] },
+        },
+        orderBy: { dataHora: "desc" },
+      })
+    : null;
+
+  const medicosPorEspecialidade = (espId: string) =>
+    unidade.medicos.filter((m) => m.especialidadeId === espId);
+
+  // Outras unidades da mesma rede (ex.: a clínica tem várias unidades).
+  const unidadesRede = unidade.rede
+    ? await prisma.unidade.findMany({
+        where: { rede: unidade.rede, ativo: true, id: { not: unidade.id } },
+        orderBy: [{ provincia: "asc" }, { municipio: "asc" }],
+        select: { id: true, nome: true, provincia: true, municipio: true, urgencia24h: true },
+      })
+    : [];
+
+  return (
+    <div className="space-y-8">
+      <Link href="/directorio" className="text-sm font-semibold text-angola-red">
+        ← Voltar ao diretório
+      </Link>
+
+      {/* Banner + identidade */}
+      <div className="card overflow-hidden">
+        <div className="relative h-56 w-full md:h-64">
+          <ImagemSegura
+            src={bannerUnidade(unidade.tipo, unidade.id, unidade.bannerUrl)}
+            fallback={imagemPadraoUnidade(unidade.tipo)}
+            alt={unidade.nome}
+            className="h-full w-full object-cover"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-angola-black/80 to-transparent" />
+          {unidade.urgencia24h && (
+            <span className="badge absolute right-4 top-4 bg-angola-red text-white">
+              Urgência 24 horas
+            </span>
+          )}
+          <div className="absolute bottom-4 left-4 flex items-end gap-4 md:left-6">
+            <div className="h-20 w-20 overflow-hidden rounded-2xl border-4 border-white bg-white shadow-card">
+              <ImagemSegura
+                src={fotoUnidade(unidade.tipo, unidade.id, unidade.logoUrl)}
+                fallback={imagemPadraoUnidade(unidade.tipo)}
+                alt=""
+                className="h-full w-full object-cover"
+              />
+            </div>
+            <div className="pb-1 text-white">
+              <span className="badge bg-white/20 text-white">
+                {ETIQUETA_TIPO_UNIDADE[unidade.tipo]}
+              </span>
+              <h1 className="mt-1 text-2xl font-bold drop-shadow">{unidade.nome}</h1>
+              <p className="text-sm text-white/90">
+                {unidade.municipio}, {unidade.provincia}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div className="grid gap-4 p-6 sm:grid-cols-2 lg:grid-cols-4">
+          <Info rotulo="Telefone" valor={unidade.telefone ?? "—"} />
+          <Info rotulo="E-mail" valor={unidade.email ?? "—"} />
+          <Info rotulo="Horário" valor={unidade.horario ?? "—"} />
+          <Info rotulo="Morada" valor={unidade.morada ?? "—"} />
+        </div>
+
+        {unidade.descricao && (
+          <p className="border-t border-base-line px-6 py-4 text-sm text-gray-600">
+            {unidade.descricao}
+          </p>
+        )}
+
+        {!eFarmacia && (
+          <div className="flex flex-wrap gap-3 border-t border-base-line p-6">
+            <Link href={`/unidades/${unidade.id}/marcar`} className="btn-primary">
+              Marcar consulta
+            </Link>
+            {marcacaoAtiva && (
+              <Link
+                href={`/unidades/${unidade.id}/marcar?remarcar=${marcacaoAtiva.id}`}
+                className="btn-ghost"
+              >
+                Remarcar consulta
+              </Link>
+            )}
+          </div>
+        )}
+      </div>
+
+      {unidade.servicos && (
+        <section className="card p-6">
+          <h2 className="text-xl font-bold">Serviços e valências</h2>
+          <p className="mt-3 whitespace-pre-line text-sm leading-6 text-gray-600">
+            {unidade.servicos}
+          </p>
+        </section>
+      )}
+
+      {/* Rede — outras unidades da mesma marca */}
+      {unidade.rede && unidadesRede.length > 0 && (
+        <section className="card p-6">
+          <h2 className="text-xl font-bold">
+            Rede {unidade.rede} — outras unidades
+          </h2>
+          <p className="mt-1 text-sm text-gray-500">
+            Esta unidade faz parte de uma rede com {unidadesRede.length + 1}{" "}
+            unidades. Escolha a que lhe for mais conveniente:
+          </p>
+          <div className="mt-4 grid gap-3 sm:grid-cols-2">
+            {unidadesRede.map((u) => (
+              <Link
+                key={u.id}
+                href={`/unidades/${u.id}`}
+                className="flex items-center justify-between rounded-xl border border-base-line p-4 transition hover:bg-base-soft"
+              >
+                <div>
+                  <p className="font-medium">{u.municipio}</p>
+                  <p className="text-sm text-gray-500">{u.provincia}</p>
+                </div>
+                <span className="flex items-center gap-2 text-sm text-angola-red">
+                  {u.urgencia24h && (
+                    <span className="badge bg-angola-red/10 text-angola-red-dark">24h</span>
+                  )}
+                  Ver →
+                </span>
+              </Link>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* Especialidades — cartões modernos com CTA */}
+      {!eFarmacia && unidade.especialidades.length > 0 && (
+        <section>
+          <h2 className="text-xl font-bold">Especialidades</h2>
+          <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {unidade.especialidades.map((e) => {
+              const meds = medicosPorEspecialidade(e.especialidadeId);
+              return (
+                <div
+                  key={e.especialidadeId}
+                  className="card flex flex-col justify-between p-5"
+                >
+                  <div>
+                    <div className="mb-2 h-1.5 w-10 rounded-full bg-angola-gold" />
+                    <h3 className="font-bold">{e.especialidade.nome}</h3>
+                    <p className="mt-1 text-sm text-gray-500">
+                      {meds.length > 0
+                        ? `${meds.length} médico(s) · ${meds
+                            .slice(0, 2)
+                            .map((m) => m.nome)
+                            .join(", ")}`
+                        : "Disponível por marcação"}
+                    </p>
+                  </div>
+                  <Link
+                    href={`/unidades/${unidade.id}/marcar?especialidade=${e.especialidadeId}`}
+                    className="btn-primary mt-4 w-full py-2"
+                  >
+                    Marcar consulta
+                  </Link>
+                </div>
+              );
+            })}
+          </div>
+        </section>
+      )}
+
+      {/* Cobertura de seguros */}
+      <section className="card p-6">
+        <h2 className="text-xl font-bold">Cobertura e atendimento</h2>
+        {eHospitalPublico ? (
+          <div className="mt-3">
+            <span className="badge bg-green-100 text-green-700">SNS / Atendimento público</span>
+            <p className="mt-3 text-sm text-gray-500">
+              A cobertura por seguro privado deve ser confirmada diretamente com a unidade.
+            </p>
+          </div>
+        ) : unidade.seguradoras.length > 0 ? (
+          <div className="mt-3 flex flex-wrap items-center gap-2">
+            {unidade.seguradoras.map((s) => (
+              <LogoSeguradora
+                key={s.seguradoraId}
+                nome={s.seguradora.nome}
+                logoUrl={s.seguradora.logoUrl}
+              />
+            ))}
+          </div>
+        ) : (
+          <p className="mt-2 text-sm text-gray-500">
+            Não foi indicada uma rede de seguros para esta unidade. Confirme a
+            cobertura diretamente antes do atendimento.
+          </p>
+        )}
+        {!eHospitalPublico && (
+          <p className="mt-3 text-sm text-gray-500">
+            A aceitação e as condições da apólice devem ser confirmadas com a unidade e a seguradora.
+          </p>
+        )}
+      </section>
+
+      {(unidade.validacao || fontes.length > 0 || unidade.observacoes) && (
+        <section className="card p-6">
+          <h2 className="text-xl font-bold">Fonte e validação dos dados</h2>
+          {unidade.validacao && (
+            <p className="mt-3">
+              <span className={`badge ${corValidacao(unidade.validacao)}`}>
+                {unidade.validacao}
+              </span>
+            </p>
+          )}
+          {fontes.length > 0 && (
+            <ul className="mt-4 space-y-2 text-sm">
+              {fontes.map((fonte, indice) => (
+                <li key={fonte}>
+                  <a
+                    href={fonte}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="break-all font-medium text-angola-red hover:underline"
+                  >
+                    Fonte pública {fontes.length > 1 ? indice + 1 : ""}
+                  </a>
+                </li>
+              ))}
+            </ul>
+          )}
+          {unidade.observacoes && (
+            <p className="mt-4 text-sm text-gray-500">{unidade.observacoes}</p>
+          )}
+          <p className="mt-4 text-xs text-gray-400">
+            Contactos, serviços e coberturas podem mudar. Confirme a informação diretamente com a entidade.
+          </p>
+        </section>
+      )}
+    </div>
+  );
+}
+
+function Info({ rotulo, valor }: { rotulo: string; valor: string }) {
+  return (
+    <div>
+      <p className="text-xs uppercase tracking-wide text-gray-400">{rotulo}</p>
+      <p className="mt-1 font-medium">{valor}</p>
+    </div>
+  );
+}
+
+function corValidacao(validacao: string) {
+  const texto = validacao.toLowerCase();
+  if (texto.includes("alto") || texto.includes("validado")) {
+    return "bg-green-100 text-green-700";
+  }
+  if (texto.includes("parcial") || texto.includes("baixo")) {
+    return "bg-angola-gold/20 text-angola-gold-dark";
+  }
+  return "bg-base-muted text-gray-600";
+}

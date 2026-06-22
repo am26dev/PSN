@@ -1,0 +1,483 @@
+// Portal de Saúde Nacional (PSN) — Angola
+// Modelo de dados do MVP. Português de Portugal nos nomes de domínio.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// IDENTIDADE E CONTAS
+// ─────────────────────────────────────────────────────────────────────────────
+
+enum TipoDocumento {
+  BI // Bilhete de Identidade de Angola
+  PASSAPORTE // Cidadãos estrangeiros
+  AUTORIZACAO_RESIDENCIA // Estrangeiros residentes em Angola
+}
+
+enum Sexo {
+  MASCULINO
+  FEMININO
+  OUTRO
+}
+
+enum Papel {
+  UTENTE // Cidadão / paciente
+  PROFISSIONAL // Médico / pessoal da unidade
+  ADMIN // Administração do portal
+}
+
+enum Parentesco {
+  FILHO
+  CONJUGE
+  PAI
+  MAE
+  OUTRO
+}
+
+// Utente = utilizador titular da conta
+model Utente {
+  id             String        @id @default(cuid())
+  tipoDocumento  TipoDocumento
+  numeroDocumento String       @unique // número de BI ou Passaporte
+  nomeCompleto   String
+  dataNascimento DateTime
+  sexo           Sexo
+  nacionalidade  String        @default("Angolana")
+  nif            String?       // Número de Identificação Fiscal (sobretudo empresas)
+  telefone       String?
+  email          String?       @unique
+  provincia      String?
+  municipio      String?
+  morada         String?
+
+  passwordHash   String
+  papel          Papel         @default(UTENTE)
+  ativo          Boolean       @default(true)
+
+  // Seguro de saúde (opcional)
+  seguradoraId   String?
+  seguradora     Seguradora?   @relation(fields: [seguradoraId], references: [id])
+  numeroApolice  String?
+
+  // Estado de verificação de identidade (KYC)
+  verificado     Boolean       @default(false)
+
+  // Foto de perfil (ficheiro cifrado no armazenamento)
+  avatarKey      String?
+
+  fichaSaude     FichaSaude?
+  dependentes    Dependente[]
+  marcacoes      Marcacao[]
+  sessoes        Sessao[]
+  verificacoes   Verificacao[] @relation("VerificacoesDoUtente")
+  verificacoesRevistas Verificacao[] @relation("VerificacoesRevistas")
+
+  // Histórico clínico (como paciente)
+  consultas      Consulta[]    @relation("ConsultasDoPaciente")
+  exames         Exame[]       @relation("ExamesDoPaciente")
+  patologias     Patologia[]   @relation("PatologiasDoPaciente")
+  // Registos que este profissional criou (médico)
+  registosConsulta Consulta[]  @relation("ConsultasDoProfissional")
+  registosExame    Exame[]     @relation("ExamesDoProfissional")
+  registosPatologia Patologia[] @relation("PatologiasDoProfissional")
+
+  // Perfil profissional (médicos)
+  especialidadeMedica String?
+  numeroOrdem         String?
+
+  criadoEm       DateTime      @default(now())
+  atualizadoEm   DateTime      @updatedAt
+
+  @@index([numeroDocumento])
+}
+
+// Agregado familiar — dependentes geridos por um Utente responsável
+model Dependente {
+  id              String        @id @default(cuid())
+  responsavelId   String
+  responsavel     Utente        @relation(fields: [responsavelId], references: [id], onDelete: Cascade)
+
+  parentesco      Parentesco
+  tipoDocumento   TipoDocumento
+  numeroDocumento String?
+  nomeCompleto    String
+  dataNascimento  DateTime
+  sexo            Sexo
+
+  marcacoes       Marcacao[]
+  criadoEm        DateTime      @default(now())
+
+  @@index([responsavelId])
+}
+
+// Sessões persistidas (permite revogação/auditoria além do cookie assinado)
+model Sessao {
+  id          String   @id @default(cuid())
+  utenteId    String
+  utente      Utente   @relation(fields: [utenteId], references: [id], onDelete: Cascade)
+  tokenHash   String   @unique
+  userAgent   String?
+  ip          String?
+  expiraEm    DateTime
+  criadoEm    DateTime @default(now())
+
+  @@index([utenteId])
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// FICHA DE SAÚDE
+// ─────────────────────────────────────────────────────────────────────────────
+
+model FichaSaude {
+  id              String   @id @default(cuid())
+  utenteId        String   @unique
+  utente          Utente   @relation(fields: [utenteId], references: [id], onDelete: Cascade)
+
+  tipoSanguineo   String?  // A+, O-, etc.
+  alergias        String?
+  doencasCronicas String?
+  medicacaoAtual  String?
+  observacoes     String?
+
+  atualizadoEm    DateTime @updatedAt
+  criadoEm        DateTime @default(now())
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// REDE DE SAÚDE: UNIDADES, ESPECIALIDADES, MÉDICOS, SEGURADORAS
+// ─────────────────────────────────────────────────────────────────────────────
+
+enum TipoUnidade {
+  HOSPITAL_PUBLICO
+  UNIDADE_HOSPITALAR
+  CLINICA_PRIVADA
+  CENTRO_MEDICO
+  CLINICA_DENTARIA
+  LABORATORIO
+  FISIOTERAPIA
+  OPTICA
+  PRESTADOR_SAUDE
+  FARMACIA
+}
+
+model Seguradora {
+  id         String              @id @default(cuid())
+  nome       String              @unique
+  sigla      String?
+  logoUrl    String?
+  ativo      Boolean             @default(true)
+  utentes    Utente[]
+  unidades   UnidadeSeguradora[]
+  criadoEm   DateTime            @default(now())
+}
+
+model Especialidade {
+  id        String                 @id @default(cuid())
+  nome      String                 @unique
+  descricao String?
+  unidades  UnidadeEspecialidade[]
+  medicos   Medico[]
+  marcacoes Marcacao[]
+}
+
+model Unidade {
+  id            String                 @id @default(cuid())
+  fonteExternaId String?
+  nome          String
+  tipo          TipoUnidade
+  provincia     String
+  municipio     String
+  morada        String?
+  telefone      String?
+  email         String?
+  latitude      Float?
+  longitude     Float?
+  horario       String?
+  urgencia24h   Boolean                @default(false)
+  ativo         Boolean                @default(true)
+
+  // Identidade visual (CMS): logótipo, banner e descrição
+  logoUrl       String?
+  bannerUrl     String?
+  descricao     String?
+  servicos      String?
+  fonteUrl      String?
+  validacao     String?
+  observacoes   String?
+  // Rede/marca a que pertence (ex.: "Clínica Sagrada Esperança") — agrupa
+  // unidades da mesma rede em vários municípios.
+  rede          String?
+
+  especialidades UnidadeEspecialidade[]
+  medicos        Medico[]
+  seguradoras    UnidadeSeguradora[]
+  marcacoes      Marcacao[]
+
+  criadoEm      DateTime               @default(now())
+
+  @@index([provincia, municipio])
+  @@index([tipo])
+  @@index([rede])
+  @@index([fonteExternaId])
+}
+
+// N:N Unidade ↔ Especialidade
+model UnidadeEspecialidade {
+  unidadeId       String
+  especialidadeId String
+  unidade         Unidade       @relation(fields: [unidadeId], references: [id], onDelete: Cascade)
+  especialidade   Especialidade @relation(fields: [especialidadeId], references: [id], onDelete: Cascade)
+
+  @@id([unidadeId, especialidadeId])
+}
+
+// N:N Unidade ↔ Seguradora (cobertura — clínicas e farmácias)
+model UnidadeSeguradora {
+  unidadeId    String
+  seguradoraId String
+  unidade      Unidade    @relation(fields: [unidadeId], references: [id], onDelete: Cascade)
+  seguradora   Seguradora @relation(fields: [seguradoraId], references: [id], onDelete: Cascade)
+
+  @@id([unidadeId, seguradoraId])
+}
+
+model Medico {
+  id              String         @id @default(cuid())
+  nome            String
+  unidadeId       String
+  unidade         Unidade        @relation(fields: [unidadeId], references: [id], onDelete: Cascade)
+  especialidadeId String
+  especialidade   Especialidade  @relation(fields: [especialidadeId], references: [id])
+  numeroOrdem     String?        // Ordem dos Médicos de Angola
+  disponivel      Boolean        @default(true)
+  marcacoes       Marcacao[]
+
+  @@index([unidadeId])
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// MARCAÇÕES E PAGAMENTOS
+// ─────────────────────────────────────────────────────────────────────────────
+
+enum EstadoMarcacao {
+  PENDENTE
+  CONFIRMADA
+  CANCELADA
+  CONCLUIDA
+}
+
+enum MetodoPagamento {
+  MULTICAIXA_EXPRESS // Pay4all (é+) — cobrança push na app Multicaixa Express
+  REFERENCIA_EMIS // Pay4all (é+) — referência EMIS paga em qualquer banco/ATM
+  E_KWANZA // Pay4all (é+) — carteira digital é-Kwanza (código QR)
+  SEGURO_SAUDE // Cobertura por seguradora (sem cobrança ao utente)
+  PAGAMENTO_ESTADO // RUPE — pagamento ao Estado
+}
+
+enum EstadoPagamento {
+  AGUARDA // referência emitida, a aguardar pagamento (Pay4all: Pendente)
+  PAGO // confirmado (Pay4all: Processada)
+  FALHADO
+  EXPIRADO // referência fora do prazo (Pay4all: Expirada)
+  ISENTO // coberto a 100% por seguro
+}
+
+model Marcacao {
+  id              String         @id @default(cuid())
+
+  // O alvo da consulta é o próprio utente OU um dependente do agregado
+  utenteId        String
+  utente          Utente         @relation(fields: [utenteId], references: [id], onDelete: Cascade)
+  dependenteId    String?
+  dependente      Dependente?    @relation(fields: [dependenteId], references: [id])
+
+  unidadeId       String
+  unidade         Unidade        @relation(fields: [unidadeId], references: [id])
+  especialidadeId String?
+  especialidade   Especialidade? @relation(fields: [especialidadeId], references: [id])
+  medicoId        String?
+  medico          Medico?        @relation(fields: [medicoId], references: [id])
+
+  dataHora        DateTime
+  motivo          String?
+  referenciaMedica String?       // referência/credencial médica indicada pelo utente
+  estado          EstadoMarcacao @default(PENDENTE)
+
+  pagamento       Pagamento?
+
+  criadoEm        DateTime       @default(now())
+  atualizadoEm    DateTime       @updatedAt
+
+  @@index([utenteId])
+  @@index([unidadeId, dataHora])
+}
+
+model Pagamento {
+  id          String          @id @default(cuid())
+  marcacaoId  String          @unique
+  marcacao    Marcacao        @relation(fields: [marcacaoId], references: [id], onDelete: Cascade)
+
+  metodo      MetodoPagamento
+  // Valores em Kwanza (KZ), armazenados em cêntimos para evitar erros de vírgula flutuante
+  valorCentimos Int
+  estado      EstadoPagamento @default(AGUARDA)
+  referencia  String?         // referência genérica / RUPE / comprovativo
+
+  // ── Integração Pay4all (é+ / é-Kwanza) ──────────────────────────────────
+  entidade       String?   // entidade EMIS (ex.: 10111)
+  referenciaEmis String?   // número da referência EMIS gerada
+  qrCode         String?   // payload/URL do código QR é-Kwanza
+  telefone       String?   // telemóvel para a cobrança Multicaixa Express
+  idParceiro     String?   // identificador da transação na Pay4all
+  expiraEm       DateTime? // validade da referência
+
+  criadoEm    DateTime        @default(now())
+  atualizadoEm DateTime       @updatedAt
+
+  @@index([referenciaEmis])
+  @@index([idParceiro])
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// VERIFICAÇÃO DE IDENTIDADE (KYC)
+// ─────────────────────────────────────────────────────────────────────────────
+
+enum EstadoVerificacao {
+  PENDENTE // criada, ainda sem submissão completa
+  EM_ANALISE // submetida, a aguardar revisão (manual ou automática)
+  APROVADO
+  REJEITADO
+}
+
+enum ResultadoBiometria {
+  PENDENTE
+  APROVADO
+  REJEITADO
+}
+
+model Verificacao {
+  id              String        @id @default(cuid())
+  utenteId        String
+  utente          Utente        @relation("VerificacoesDoUtente", fields: [utenteId], references: [id], onDelete: Cascade)
+
+  // Documento submetido
+  tipoDocumento   TipoDocumento
+  numeroDocumento String
+  nomeCompleto    String?
+  dataNascimento  String?
+  nacionalidade   String?       @default("Angolana")
+
+  estado          EstadoVerificacao @default(PENDENTE)
+
+  // Chaves de armazenamento (imagens cifradas — nunca o ficheiro em claro)
+  imagemFrenteKey String?
+  imagemVersoKey  String?
+  selfieKey       String?
+
+  // Resultados da análise (encaixe para OCR/biometria/SIAC reais)
+  ocrDados        Json?
+  resultadoBiometria ResultadoBiometria @default(PENDENTE)
+  pontuacaoRisco  Float?        // 0 (baixo risco) a 100 (alto risco)
+  motivoRejeicao  String?
+
+  // Revisão administrativa
+  revistoPorId    String?
+  revistoPor      Utente?       @relation("VerificacoesRevistas", fields: [revistoPorId], references: [id])
+  revistoEm       DateTime?
+
+  eventos         VerificacaoEvento[]
+
+  criadoEm        DateTime      @default(now())
+  atualizadoEm    DateTime      @updatedAt
+
+  @@index([utenteId])
+  @@index([estado])
+}
+
+// Trilho de auditoria de cada verificação
+model VerificacaoEvento {
+  id             String      @id @default(cuid())
+  verificacaoId  String
+  verificacao    Verificacao @relation(fields: [verificacaoId], references: [id], onDelete: Cascade)
+  evento         String
+  metadata       Json?
+  criadoEm       DateTime    @default(now())
+
+  @@index([verificacaoId])
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// HISTÓRICO CLÍNICO (acesso: paciente + profissional)
+// ─────────────────────────────────────────────────────────────────────────────
+
+enum EstadoPatologia {
+  ATIVA
+  CRONICA
+  RESOLVIDA
+}
+
+model Consulta {
+  id             String   @id @default(cuid())
+  pacienteId     String
+  paciente       Utente   @relation("ConsultasDoPaciente", fields: [pacienteId], references: [id], onDelete: Cascade)
+  profissionalId String?
+  profissional   Utente?  @relation("ConsultasDoProfissional", fields: [profissionalId], references: [id])
+  profissionalNome String?
+  unidadeNome    String?
+  data           DateTime @default(now())
+  motivo         String?
+  diagnostico    String?
+  notas          String?
+  criadoEm       DateTime @default(now())
+
+  @@index([pacienteId])
+}
+
+model Exame {
+  id             String   @id @default(cuid())
+  pacienteId     String
+  paciente       Utente   @relation("ExamesDoPaciente", fields: [pacienteId], references: [id], onDelete: Cascade)
+  profissionalId String?
+  profissional   Utente?  @relation("ExamesDoProfissional", fields: [profissionalId], references: [id])
+  profissionalNome String?
+  nome           String
+  data           DateTime @default(now())
+  resultado      String?
+  notas          String?
+  ficheiroKey    String?  // anexo cifrado (PDF/imagem do resultado)
+  criadoEm       DateTime @default(now())
+
+  @@index([pacienteId])
+}
+
+model Patologia {
+  id             String          @id @default(cuid())
+  pacienteId     String
+  paciente       Utente          @relation("PatologiasDoPaciente", fields: [pacienteId], references: [id], onDelete: Cascade)
+  profissionalId String?
+  profissional   Utente?         @relation("PatologiasDoProfissional", fields: [profissionalId], references: [id])
+  nome           String
+  estado         EstadoPatologia @default(ATIVA)
+  desde          String?
+  notas          String?
+  criadoEm       DateTime        @default(now())
+
+  @@index([pacienteId])
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// CONTEÚDO EDITÁVEL DO SITE (CMS) — textos geridos pela administração
+// ─────────────────────────────────────────────────────────────────────────────
+
+model ConteudoSite {
+  chave        String   @id // identificador do campo (ex.: home_cta_titulo)
+  valor        String
+  atualizadoEm DateTime @updatedAt
+  criadoEm     DateTime @default(now())
+}
