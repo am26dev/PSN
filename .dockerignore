@@ -1,0 +1,18 @@
+# ── .dockerignore ────────────────────────────────────────────────────────────
+# Exclui ficheiros desnecessários da imagem (reduz tamanho e tempo de build)
+
+node_modules
+.next
+.git
+.env
+.env.local
+*.md
+uploads/
+.uploads/
+dist/
+coverage/
+tmp/
+test/
+.vscode/
+.idea/
+*.log

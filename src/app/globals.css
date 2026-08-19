@@ -1,0 +1,46 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --font-inter: "Inter", system-ui, sans-serif;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  @apply bg-base-soft text-angola-black antialiased;
+}
+
+.full-bleed {
+  margin-left: calc(50% - 50vw);
+  margin-right: calc(50% - 50vw);
+  width: 100vw;
+}
+
+@layer components {
+  /* Botão de ação primário — usa o dourado (10%) para a chamada de ação */
+  .btn-primary {
+    @apply inline-flex items-center justify-center gap-2 rounded-xl bg-angola-red px-5 py-3 text-sm font-semibold text-white shadow-card transition hover:bg-angola-red-dark focus:outline-none focus:ring-2 focus:ring-angola-gold focus:ring-offset-2 disabled:opacity-60;
+  }
+  .btn-gold {
+    @apply inline-flex items-center justify-center gap-2 rounded-xl bg-angola-gold px-5 py-3 text-sm font-semibold text-angola-black shadow-card transition hover:bg-angola-gold-dark focus:outline-none focus:ring-2 focus:ring-angola-red focus:ring-offset-2 disabled:opacity-60;
+  }
+  .btn-ghost {
+    @apply inline-flex items-center justify-center gap-2 rounded-xl border border-base-line bg-white px-5 py-3 text-sm font-semibold text-angola-black transition hover:bg-base-muted focus:outline-none focus:ring-2 focus:ring-angola-red;
+  }
+  .card {
+    @apply rounded-2xl border border-base-line bg-white shadow-card;
+  }
+  .input {
+    @apply w-full rounded-xl border border-base-line bg-white px-4 py-3 text-sm text-angola-black outline-none transition focus:border-angola-red focus:ring-2 focus:ring-angola-red/20 placeholder:text-gray-400;
+  }
+  .label {
+    @apply mb-1.5 block text-sm font-medium text-angola-black;
+  }
+  .badge {
+    @apply inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-medium;
+  }
+}

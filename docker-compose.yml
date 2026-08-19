@@ -1,0 +1,52 @@
+# ── docker-compose.yml ───────────────────────────────────────────────────────
+# Orquestra 2 serviços: app (Next.js) + db (PostgreSQL)
+
+services:
+  # ── Banco de dados ────────────────────────────────────────────────────────
+  db:
+    image: postgres:16-alpine          # PostgreSQL versão 16, Alpine
+    restart: unless-stopped            # Reinicia se crashar (não em produção manual)
+    environment:
+      POSTGRES_USER: postgres          # Utilizador do banco
+      POSTGRES_PASSWORD: psn2026       # Senha do banco
+      POSTGRES_DB: psn                 # Nome do banco criado automaticamente
+    ports:
+      - "5433:5432"                    # Expõe na 5433 para evitar conflito com PG local
+    volumes:
+      - pgdata:/var/lib/postgresql/data  # Dados persistem entre reinícios
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]  # Verifica se o PG está pronto
+      interval: 5s                                   # A cada 5 segundos
+      timeout: 3s                                    # Timeout de 3s
+      retries: 5                                     # 5 tentativas antes de declarar falha
+
+  # ── App Next.js ───────────────────────────────────────────────────────────
+  app:
+    build:                             # Constrói a imagem a partir do Dockerfile
+      context: .                       # Diretório de contexto (raiz do projeto)
+      dockerfile: Dockerfile           # Nome do ficheiro Dockerfile
+    dns:
+      - 127.0.0.11                     # DNS embutido do Docker (resolve "db")
+    restart: unless-stopped
+    ports:
+      - "3000:3000"                    # Mapeia porta 3000 do container para o host
+    environment:
+      DATABASE_URL: postgresql://postgres:psn2026@db:5432/psn?schema=public
+      #                     user     pass    host  porta  banco
+      # "db" é o nome do serviço — Docker resolve automaticamente o IP
+      SESSION_SECRET: chave-sessao-producao-32caracteres-minimos-abc123
+      STORAGE_SECRET: chave-cifragem-producao-32caracteres-minimos!
+      STORAGE_DRIVER: local            # "local" ou "s3" conforme necessidade
+      NODE_ENV: production
+      PAY4ALL_WEBHOOK_SECRET: ""
+      PSN_ADMIN_DOCS: ""               # Documentos ADMIN (separados por vírgula)
+    volumes:
+      - uploads:/app/.uploads          # Persiste uploads entre reinícios
+    depends_on:
+      db:
+        condition: service_healthy     # Só arranca quando o PG estiver saudável
+
+# ── Volumes nomeados ─────────────────────────────────────────────────────────
+volumes:
+  pgdata:                              # Dados do PostgreSQL
+  uploads:                             # Ficheiros armazenados localmente
